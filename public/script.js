@@ -12,7 +12,7 @@
             name: "leasodijfoasidjf@webauthn.guide",
             displayName: "Lee",
         },
-        pubKeyCredParams: [{alg: -257, type: "public-key"}],
+        pubKeyCredParams: [{alg: -7, type: "public-key"}],
         authenticatorSelection: {
             authenticatorAttachment: "platform",
             requireResidentKey: true,

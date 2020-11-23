@@ -1,8 +1,106 @@
 <html>
 <head>
-    <script type="text/javascript" src="./script.js"></script>
+    <!-- <script type="text/javascript" src="./script.js"></script> -->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 </head>
 <body>
-<div id="text">hi</div>
+    
+    Username:
+    <br>
+    <input type="text" name="username" id="email" placeholder="eg. foo">
+    <br>
+    <br>
+    <button onclick="registerUser()">Register</button>
+    <button onclick="loginUser()">Login</button>
+
+    <script>
+
+        $(document).ready(function () {
+            // check whether current browser supports WebAuthn
+            if (!window.PublicKeyCredential) {
+                alert("Error: this browser does not support WebAuthn");
+                return;
+            }
+        });
+
+        async function registerUser() {
+            username = $("#email").val()
+            if (username === "") {
+                alert("Please enter a username");
+                return;
+            }
+
+            const publicKeyCredentialCreationOptions = {
+                challenge: Uint8Array.from(
+                    "randomStringFromServer", c => c.charCodeAt(0)),
+                rp: {
+                    name: "Localhost",
+                    id: "localhost",
+                },
+                user: {
+                    id: Uint8Array.from(
+                        "UZSL85T9AFC", c => c.charCodeAt(0)),
+                    name: username,
+                    displayName: username+"@tor.us",
+                },
+                pubKeyCredParams: [{alg: -257, type: "public-key"}],
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform",
+                    requireResidentKey: true,
+                    userVerification: "required"
+                },
+                timeout: 60000,
+                attestation: "direct"
+            };
+
+            const credential = await navigator.credentials.create({
+                publicKey: publicKeyCredentialCreationOptions
+            });
+
+            alert("registration complete")
+
+            console.log(credential)
+        }
+
+        async function loginUser(){
+            username = $("#email").val()
+            if (username === "") {
+                alert("Please enter a username");
+                return;
+            }
+
+            const publicKeyCredentialCreationOptions = {
+                challenge: Uint8Array.from(
+                    "randomStringFromServer", c => c.charCodeAt(0)),
+                rp: {
+                    name: "Localhost",
+                    id: "localhost",
+                },
+                user: {
+                    id: Uint8Array.from(
+                        "UZSL85T9AFC", c => c.charCodeAt(0)),
+                    name: username,
+                    displayName: username+"@tor.us",
+                },
+                pubKeyCredParams: [{alg: -257, type: "public-key"}],
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform",
+                    requireResidentKey: true,
+                    userVerification: "required"
+                },
+                timeout: 60000,
+                attestation: "direct"
+            };
+
+            const credential = await navigator.credentials.get({
+                publicKey: publicKeyCredentialCreationOptions
+            });
+
+            console.log(credential)
+
+            alert("login complete")
+        }
+    </script>
 </body>
 </html>
