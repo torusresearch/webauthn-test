@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 app.use(express.static('public'))
+console.log('process env PORT', process.env.PORT)
 app.listen(process.env.PORT || 4000)
 // const app2 = express()
 // app2.use(express.static('public2'))
