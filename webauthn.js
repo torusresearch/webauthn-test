@@ -1,0 +1,90 @@
+var BN = require("bn.js");
+var crypto = require("crypto");
+var cbor = require('cbor')
+var base64url = require('base64url')
+var clientData =
+  Buffer.from('{"type":"webauthn.get","challenge":"cmFuZG9tU3RyaW5nRnJvbVNlcnZlcg","origin":"http://localhost:4000","crossOrigin":false,"other_keys_can_be_added_here":"do not compare clientDataJSON against a template. See https://goo.gl/yabPex"}', 'utf8')
+// console.log(clientData)
+var sig = 'qpxVX5A0knCwUAEBFuodNTDR9JryVYv9tGL4c48VdlXkreCLjeZMwLtELOziqAJ4GbX3L/VmCWC4vQbkXOoxHRpqWPrG8pUBrYrRhoh/YE9N0S+Dtrz5K+aoErbwqyb8MePcQVsLOq11l6qV4pZK3zcdub93rHboHDmuGARKdGpH5n2ptSUUnTlPKvsxeyVCQ76HYzGyhJ8bEPXrQjSrrgmufnsRSfDvi0Is17s4NzjpwEP+SnD86z0md2+3+Zq7Hs58Rbzr8o3PrJzD4RoU7l4Gcs733ppUsDfuCpxDrIQEuvZoppzp8NYYtanWxAMghxQxyI08nbvKZQOh1F0QQg=='
+var authData = Buffer.from('SZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2MFAAAABw==', 'base64')
+var userHandle = 'VVpTTDg1VDlBRkM='
+var attestData = Buffer.from('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', 'base64')
+
+function parseGetAssertAuthData (buffer) {
+  const rpIdHash = buffer.slice(0, 32)
+  buffer = buffer.slice(32)
+
+  const flagsBuf = buffer.slice(0, 1)
+  buffer = buffer.slice(1)
+
+  const flags = flagsBuf[0]
+
+  const counterBuf = buffer.slice(0, 4)
+  buffer = buffer.slice(4)
+
+  const counter = counterBuf.readUInt32BE(0)
+
+  return { rpIdHash, flagsBuf, flags, counter, counterBuf }
+}
+
+function parseMakeCredAuthData (buffer) {
+  const rpIdHash = buffer.slice(0, 32)
+  buffer = buffer.slice(32)
+
+  const flagsBuf = buffer.slice(0, 1)
+  buffer = buffer.slice(1)
+
+  const flags = flagsBuf[0]
+
+  const counterBuf = buffer.slice(0, 4)
+  buffer = buffer.slice(4)
+
+  const counter = counterBuf.readUInt32BE(0)
+
+  const aaguid = buffer.slice(0, 16)
+  buffer = buffer.slice(16)
+
+  const credIDLenBuf = buffer.slice(0, 2)
+  buffer = buffer.slice(2)
+
+  const credIDLen = credIDLenBuf.readUInt16BE(0)
+
+  const credID = buffer.slice(0, credIDLen)
+  buffer = buffer.slice(credIDLen)
+
+  const COSEPublicKey = buffer
+
+  return { rpIdHash, flagsBuf, flags, counter, counterBuf, aaguid, credID, COSEPublicKey }
+}
+
+function hash (data) {
+  return crypto.createHash('sha256')
+    .update(data)
+    .digest()
+}
+
+
+function COSEECDHAtoPKCS (COSEPublicKey) {
+  const coseStruct = cbor.decodeAllSync(COSEPublicKey)[0]
+  console.log('coseStruct',coseStruct)
+  const tag = Buffer.from([0x04])
+  const x = coseStruct.get(-1)
+  const y = coseStruct.get(-2)
+
+  console.log('x', x, 'y', y)
+
+  return Buffer.concat([tag, x, y])
+}
+
+const ctapMakeCredResp = cbor.decodeAllSync(attestData)[0]
+console.log('ctapMakeCredResp',ctapMakeCredResp)
+const authrDataStruct = parseMakeCredAuthData(ctapMakeCredResp.authData)
+console.log('authrDataStruct',authrDataStruct)
+const pubKey = COSEECDHAtoPKCS(authrDataStruct.COSEPublicKey)
+console.log(pubKey)
+
+// verify
+// console.log(parseGetAssertAuthData(authData))
+// var clientDataHash = hash(clientData)
+// var sigBase = Buffer.concat([authData, clientDataHash])
+// var publicKey = 
