@@ -8,7 +8,7 @@ window.Buffer = require("buffer").Buffer;
       id: "stark-citadel-03331.herokuapp.com",
     },
     user: {
-      id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)),
+      id: Uint8Array.from(new Date(Date.now()).toGMTString(), (c) => c.charCodeAt(0)),
       name: "created at " + new Date(Date.now()).toGMTString(),
       displayName: "anonymous",
     },
