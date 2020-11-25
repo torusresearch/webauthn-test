@@ -1,5 +1,6 @@
 window.Buffer = require("buffer").Buffer;
 (async function () {
+  console.log("HAOSHOFAHO");
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
     rp: {
@@ -8,14 +9,14 @@ window.Buffer = require("buffer").Buffer;
     },
     user: {
       id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)),
-      name: "anonymous",
-      displayName: "created at " + new Date(Date.now()).toGMTString(),
+      name: "created at " + new Date(Date.now()).toGMTString(),
+      displayName: "anonymous",
     },
     pubKeyCredParams: [{ alg: -257, type: "public-key" }],
     authenticatorSelection: {
       authenticatorAttachment: "platform",
       requireResidentKey: true,
-      userVerification: "required",
+      userVerification: "discouraged",
     },
     timeout: 60000,
     attestation: "direct",
@@ -44,24 +45,24 @@ window.Buffer = require("buffer").Buffer;
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
   try {
-      const credential = await navigator.credentials.create({
-        publicKey: publicKeyCredentialCreationOptions,
-      });
-      console.log(credential);
+    const credential = await navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions,
+    });
+    console.log(credential);
   } catch (e) {
-      console.error(e)
+    console.error(e);
   }
   try {
-      const login = await navigator.credentials.get({
-        publicKey: {
-          challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
+    const login = await navigator.credentials.get({
+      publicKey: {
+        challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
         //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
-          timeout: 60000,
-        },
-      });
-      console.log(login)
+        timeout: 60000,
+      },
+    });
+    console.log(login);
   } catch (e) {
-      console.error(e)
+    console.error(e);
   }
   // const assertion = await navigator.credentials.get({
   //     publicKeyCredentialCreationOptions
