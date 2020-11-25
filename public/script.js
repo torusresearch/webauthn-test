@@ -9,14 +9,8 @@ window.Buffer = require("buffer").Buffer;
     user: {
       id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)),
       name: "anonymous",
-      displayName: "Anonymous",
+      displayName: "created at " + new Date(Date.now()).toGMTString(),
     },
-    excludeCredentials: [
-      {
-        type: "public-key",
-        id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)),
-      },
-    ],
     pubKeyCredParams: [{ alg: -257, type: "public-key" }],
     authenticatorSelection: {
       authenticatorAttachment: "platform",
