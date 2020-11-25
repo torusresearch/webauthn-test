@@ -16,7 +16,7 @@ window.Buffer = require("buffer").Buffer;
     authenticatorSelection: {
       authenticatorAttachment: "platform",
       requireResidentKey: true,
-      userVerification: "discouraged",
+      userVerification: "required",
     },
     timeout: 60000,
     attestation: "direct",
@@ -57,7 +57,9 @@ window.Buffer = require("buffer").Buffer;
       publicKey: {
         challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
         //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
+        allowCredentials: [],
         timeout: 60000,
+        userVerification: "discouraged"
       },
     });
     console.log(login);
