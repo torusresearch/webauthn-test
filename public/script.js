@@ -49,18 +49,26 @@ window.Buffer = require("buffer").Buffer;
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
-  const credential = await navigator.credentials.create({
-    publicKey: publicKeyCredentialCreationOptions,
-  });
-  console.log(credential);
-  const login = navigator.credentials.get({
-    publicKey: {
-      challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
-    //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
-      timeout: 60000,
-    },
-  });
-  console.log(login)
+  try {
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions,
+      });
+      console.log(credential);
+  } catch (e) {
+      console.error(e)
+  }
+  try {
+      const login = await navigator.credentials.get({
+        publicKey: {
+          challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
+        //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
+          timeout: 60000,
+        },
+      });
+      console.log(login)
+  } catch (e) {
+      console.error(e)
+  }
   // const assertion = await navigator.credentials.get({
   //     publicKeyCredentialCreationOptions
   // })
