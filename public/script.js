@@ -1,28 +1,34 @@
 window.Buffer = require('buffer').Buffer
 
 ;(async function() {
-    // const publicKeyCredentialCreationOptions = {
-    //     challenge: Uint8Array.from(
-    //         "randomStringFromServer", c => c.charCodeAt(0)),
-    //     rp: {
-    //         name: "STARKCITY",
-    //         id: "stark-citadel-03331.herokuapp.com",
-    //     },
-    //     user: {
-    //         id: Uint8Array.from(
-    //             "UZSL85T9AFC", c => c.charCodeAt(0)),
-    //         name: "anonymous",
-    //         displayName: "Anony Mouse",
-    //     },
-    //     pubKeyCredParams: [{alg: -257, type: "public-key"}],
-    //     authenticatorSelection: {
-    //         authenticatorAttachment: "platform",
-    //         requireResidentKey: true,
-    //         userVerification: "required"
-    //     },
-    //     timeout: 60000,
-    //     attestation: "direct"
-    // };
+    const publicKeyCredentialCreationOptions = {
+        challenge: Uint8Array.from(
+            "randomStringFromServer", c => c.charCodeAt(0)),
+        rp: {
+            name: "STARKCITY",
+            id: "stark-citadel-03331.herokuapp.com",
+        },
+        user: {
+            id: Uint8Array.from(
+                "anonymous", c => c.charCodeAt(0)),
+            name: "anonymous",
+            displayName: "Anonymous",
+        },
+        excludeCredentials: [
+            {
+                type: 'public-key',
+                id: Uint8Array.from('anonymous', c => c.charCodeAt(0))
+            }
+        ],
+        pubKeyCredParams: [{alg: -257, type: "public-key"}],
+        authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            requireResidentKey: true,
+            userVerification: "required"
+        },
+        timeout: 60000,
+        attestation: "direct"
+    };
     // function subAlg(alg) {
     //     publicKeyCredentialCreationOptions.pubKeyCredParams[0].alg = alg
     //     return publicKeyCredentialCreationOptions
@@ -32,24 +38,24 @@ window.Buffer = require('buffer').Buffer
         setTimeout(resolve, 1000)
     })
 
-    navigator.credentials.get({
-        mediation: 'required',
-        publicKey: {
-            challenge: Uint8Array.from(
-                "randomStringFromServer", c => c.charCodeAt(0)),
-            allowCredentials: [],
-            timeout: 60000
-        }
-    })
+    // navigator.credentials.get({
+    //     mediation: 'required',
+    //     publicKey: {
+    //         challenge: Uint8Array.from(
+    //             "randomStringFromServer", c => c.charCodeAt(0)),
+    //         allowCredentials: [],
+    //         timeout: 60000
+    //     }
+    // })
 
     // for (var algId = -65535; algId <= 65535; algId++) {
     //     try {
     //         document.getElementById("text").textContent = algId.toString()
     // console.log(algId + " passed")
-    // const credential = await navigator.credentials.create({
-    //     publicKey: publicKeyCredentialCreationOptions
-    // });
-    // console.log(credential)
+    const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions
+    });
+    console.log(credential)
     // const assertion = await navigator.credentials.get({
     //     publicKeyCredentialCreationOptions
     // })
