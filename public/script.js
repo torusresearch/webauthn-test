@@ -56,7 +56,7 @@ window.Buffer = require("buffer").Buffer;
   const login = navigator.credentials.get({
     publicKey: {
       challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
-      allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
+    //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
       timeout: 60000,
     },
   });
