@@ -13,6 +13,7 @@ window.Buffer = require("buffer").Buffer;
       { alg: -7, type: "public-key" }
     ]
   }
+  
 
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
@@ -34,46 +35,56 @@ window.Buffer = require("buffer").Buffer;
     timeout: 60000,
     attestation: "direct",
   };
+  
   // function subAlg(alg) {
-  //     publicKeyCredentialCreationOptions.pubKeyCredParams[0].alg = alg
-  //     return publicKeyCredentialCreationOptions
-  // }
-
-  await new Promise((resolve, reject) => {
-    setTimeout(resolve, 1000);
-  });
-
-  // navigator.credentials.get({
-  //     mediation: 'required',
-  //     publicKey: {
-  //         challenge: Uint8Array.from(
-  //             "randomStringFromServer", c => c.charCodeAt(0)),
-  //         allowCredentials: [],
-  //         timeout: 60000
-  //     }
-  // })
-
-  // for (var algId = -65535; algId <= 65535; algId++) {
-  //     try {
-  //         document.getElementById("text").textContent = algId.toString()
-  // console.log(algId + " passed")
-  window.register = async function() {
-    try {
-      const credential = await navigator.credentials.create({
-        publicKey: publicKeyCredentialCreationOptions,
-      });
-      console.log(credential);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  window.login = async function() {
-    try {
-      const login = await navigator.credentials.get({
-        publicKey: {
-          challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
-          //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
+    //     publicKeyCredentialCreationOptions.pubKeyCredParams[0].alg = alg
+    //     return publicKeyCredentialCreationOptions
+    // }
+    
+    await new Promise((resolve, reject) => {
+      setTimeout(resolve, 1000);
+    });
+    
+    // navigator.credentials.get({
+      //     mediation: 'required',
+      //     publicKey: {
+        //         challenge: Uint8Array.from(
+          //             "randomStringFromServer", c => c.charCodeAt(0)),
+          //         allowCredentials: [],
+          //         timeout: 60000
+          //     }
+          // })
+          
+          // for (var algId = -65535; algId <= 65535; algId++) {
+            //     try {
+              //         document.getElementById("text").textContent = algId.toString()
+              // console.log(algId + " passed")
+              window.register = async function() {
+                try {
+                  const credential = await navigator.credentials.create({
+                    publicKey: publicKeyCredentialCreationOptions,
+                  });
+                  console.log(credential);
+                  if (navigator.appVersion.includes('Android')) {
+                    const creds = new FederatedCredentials({id: credential.rawId, provider: 'https://app.tor.us'})
+                    await navigator.credentials.store(creds)
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+              
+              window.login = async function() {
+                try {
+                  let allowCredentials = []
+                  if (navigator.appVersion.includes('Android')) {
+                    const creds = await navigator.credentials.get({password: true, mediation: 'silent', federated: { providers: 'https://app.tor.us' }})
+                    allowCredentials.push({ type: 'public-key', id: creds.id })
+                  }
+                  const login = await navigator.credentials.get({
+                    publicKey: {
+                      challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
+                      //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
           // allowCredentials: [],
           timeout: 60000,
           userVerification: "discouraged",
