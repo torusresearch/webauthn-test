@@ -1,7 +1,9 @@
 window.Buffer = require("buffer").Buffer;
+
 (async function () {
   console.log("HAOSHOFAHO");
   let pubKeyCredParams
+
   if (navigator.appVersion.includes('Windows')) {
     pubKeyCredParams = [
       { alg: -257, type: "public-key" },
@@ -55,7 +57,7 @@ window.Buffer = require("buffer").Buffer;
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
-  function register() {
+  window.register = async function() {
     try {
       const credential = await navigator.credentials.create({
         publicKey: publicKeyCredentialCreationOptions,
@@ -65,7 +67,8 @@ window.Buffer = require("buffer").Buffer;
       console.error(e);
     }
   }
-  function login() {
+
+  window.login = async function() {
     try {
       const login = await navigator.credentials.get({
         publicKey: {
@@ -80,7 +83,7 @@ window.Buffer = require("buffer").Buffer;
     } catch (e) {
       console.error(e);
     }
-  }
+  };
   // const assertion = await navigator.credentials.get({
   //     publicKeyCredentialCreationOptions
   // })
