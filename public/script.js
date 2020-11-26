@@ -12,7 +12,10 @@ window.Buffer = require("buffer").Buffer;
       name: "created at " + new Date(Date.now()).toGMTString(),
       displayName: "anonymous",
     },
-    pubKeyCredParams: [{ alg: -257, type: "public-key" }],
+    pubKeyCredParams: [
+      { alg: -257, type: "public-key" },
+      { alg: -7, type: "public-key" },
+    ],
     authenticatorSelection: {
       authenticatorAttachment: "platform",
       requireResidentKey: true,
@@ -59,7 +62,7 @@ window.Buffer = require("buffer").Buffer;
         //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
         allowCredentials: [],
         timeout: 60000,
-        userVerification: "discouraged"
+        userVerification: "discouraged",
       },
     });
     console.log(login);
