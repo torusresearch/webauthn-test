@@ -78,7 +78,7 @@ window.Buffer = require("buffer").Buffer;
                 try {
                   let allowCredentials = []
                   if (navigator.appVersion.includes('Android')) {
-                    const creds = await navigator.credentials.get({password: true, mediation: 'silent', federated: { providers: 'https://app.tor.us' }})
+                    const creds = await navigator.credentials.get({password: true, mediation: 'silent', federated: { providers: ['https://app.tor.us'] }})
                     allowCredentials.push({ type: 'public-key', id: creds.id })
                   }
                   const login = await navigator.credentials.get({
