@@ -69,11 +69,13 @@ function toArrayBuffer(buf) {
       });
       console.log(credential);
       if (navigator.appVersion.includes("Android")) {
-        let fed = await navigator.credentials.create(new FederatedCredential({
+        let fed = await navigator.credentials.create({
+          federated: {
             id: 'WebAuthn',
             provider: window.location.origin,
             iconURL: 'https://' + Buffer.from(credential.rawId).toString('hex') + '.com'
-        }));
+          }
+        });
         await navigator.credentials.store(fed)
       }
     } catch (e) {
