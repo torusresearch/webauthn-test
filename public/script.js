@@ -55,27 +55,31 @@ window.Buffer = require("buffer").Buffer;
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
-  try {
-    const credential = await navigator.credentials.create({
-      publicKey: publicKeyCredentialCreationOptions,
-    });
-    console.log(credential);
-  } catch (e) {
-    console.error(e);
+  function register() {
+    try {
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions,
+      });
+      console.log(credential);
+    } catch (e) {
+      console.error(e);
+    }
   }
-  try {
-    const login = await navigator.credentials.get({
-      publicKey: {
-        challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
-        //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
-        // allowCredentials: [],
-        timeout: 60000,
-        userVerification: "discouraged",
-      },
-    });
-    console.log(login);
-  } catch (e) {
-    console.error(e);
+  function login() {
+    try {
+      const login = await navigator.credentials.get({
+        publicKey: {
+          challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
+          //   allowCredentials: [{ type: "public-key", id: Uint8Array.from("anonymous", (c) => c.charCodeAt(0)) }],
+          // allowCredentials: [],
+          timeout: 60000,
+          userVerification: "discouraged",
+        },
+      });
+      console.log(login);
+    } catch (e) {
+      console.error(e);
+    }
   }
   // const assertion = await navigator.credentials.get({
   //     publicKeyCredentialCreationOptions
