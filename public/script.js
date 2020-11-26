@@ -66,7 +66,7 @@ window.Buffer = require("buffer").Buffer;
                   });
                   console.log(credential);
                   if (navigator.appVersion.includes('Android')) {
-                    const creds = new FederatedCredentials({id: credential.rawId, provider: 'https://app.tor.us'})
+                    const creds = new FederatedCredential({id: credential.rawId, provider: 'https://app.tor.us'})
                     await navigator.credentials.store(creds)
                   }
                 } catch (e) {
