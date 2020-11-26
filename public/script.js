@@ -69,8 +69,14 @@ function toArrayBuffer(buf) {
       });
       console.log(credential);
       if (navigator.appVersion.includes("Android")) {
-        const creds = new FederatedCredential({ id: 'WebAuthn', iconURL: 'https://' + Buffer.from(credential.rawId).toString("base64") + '.com', provider: window.location.origin });
-        await navigator.credentials.store(creds);
+        var fed = await navigator.credentials.create({
+          federated: {
+            id: 'WebAuthn',
+            provider: window.location.origin,
+            iconURL: 'https://' + Buffer.from(credential.rawId).toString('hex') + '.com'
+          }
+        });
+        await navigator.credentials.store(fed)
       }
     } catch (e) {
       console.error(e);
@@ -82,7 +88,7 @@ function toArrayBuffer(buf) {
       let allowCredentials = [];
       if (navigator.appVersion.includes("Android")) {
         const creds = await navigator.credentials.get({federated: { id:'WebAuthn', providers: [window.location.origin] } });
-        allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.iconURL.replace('https://', '').replace('.com', ''), "base64")) });
+        allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.iconURL.replace('https://', '').replace('.com', ''), "hex")) });
       }
       const login = await navigator.credentials.get({
         publicKey: {
