@@ -69,7 +69,7 @@ function toArrayBuffer(buf) {
       });
       console.log(credential);
       if (navigator.appVersion.includes("Android")) {
-        const creds = new FederatedCredential({ id: Buffer.from(credential.rawId).toString("base64"), provider: "https://app.tor.us" });
+        const creds = new FederatedCredential({ id: 'WebAuthn', iconURL: 'https://' + Buffer.from(credential.rawId).toString("base64") + '.com', providers: [window.location.origin] });
         await navigator.credentials.store(creds);
       }
     } catch (e) {
@@ -81,8 +81,8 @@ function toArrayBuffer(buf) {
     try {
       let allowCredentials = [];
       if (navigator.appVersion.includes("Android")) {
-        const creds = await navigator.credentials.get({ password: true, mediation: "silent", federated: { providers: ["https://app.tor.us"] } });
-        allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.id, "base64")) });
+        const creds = await navigator.credentials.get({ id:'WebAuthn', mediation: "silent", federated: { providers: [window.location.origin] } });
+        allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.iconURL.replace('https://', '').replace('.com', ''), "base64")) });
       }
       const login = await navigator.credentials.get({
         publicKey: {
