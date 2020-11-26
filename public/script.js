@@ -1,6 +1,17 @@
 window.Buffer = require("buffer").Buffer;
 (async function () {
   console.log("HAOSHOFAHO");
+  let pubKeyCredParams
+  if (navigator.appVersion.includes('Windows')) {
+    pubKeyCredParams = [
+      { alg: -257, type: "public-key" },
+    ]
+  } else {
+    pubKeyCredParams = [
+      { alg: -7, type: "public-key" }
+    ]
+  }
+
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
     rp: {
@@ -12,10 +23,7 @@ window.Buffer = require("buffer").Buffer;
       name: "created at " + new Date(Date.now()).toGMTString(),
       displayName: "anonymous",
     },
-    pubKeyCredParams: [
-      { alg: -257, type: "public-key" },
-      { alg: -7, type: "public-key" },
-    ],
+    pubKeyCredParams,
     authenticatorSelection: {
       authenticatorAttachment: "platform",
       requireResidentKey: true,
