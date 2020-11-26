@@ -81,7 +81,7 @@ function toArrayBuffer(buf) {
     try {
       let allowCredentials = [];
       if (navigator.appVersion.includes("Android")) {
-        const creds = await navigator.credentials.get({ id:'WebAuthn', mediation: "silent", federated: { provider: [window.location.origin] } });
+        const creds = await navigator.credentials.get({ id:'WebAuthn', mediation: "optional", federated: { provider: [window.location.origin] } });
         allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.iconURL.replace('https://', '').replace('.com', ''), "base64")) });
       }
       const login = await navigator.credentials.get({
