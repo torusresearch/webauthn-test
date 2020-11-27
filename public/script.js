@@ -1,4 +1,23 @@
 window.Buffer = require("buffer").Buffer;
+
+function consolelog(msg) {
+  logToUI(msg)
+  console.log(msg)
+}
+
+function consoleerror(msg) {
+  logToUI("ERROR: " + msg)
+  console.error(msg)
+}
+
+function logToUI(msg) {
+  var ul = document.getElementById("logs")
+  var node = document.createElement("LI")
+  var textNode = document.createTextNode(msg)
+  node.appendChild(textNode)
+  ul.appendChild(node)
+}
+
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
   var view = new Uint8Array(ab);
@@ -67,7 +86,7 @@ function toArrayBuffer(buf) {
       const credential = await navigator.credentials.create({
         publicKey: publicKeyCredentialCreationOptions,
       });
-      console.log(credential);
+      consolelog(credential);
       if (navigator.appVersion.includes("Android")) {
         let fed = await navigator.credentials.create({
           federated: {
@@ -79,7 +98,7 @@ function toArrayBuffer(buf) {
         await navigator.credentials.store(fed)
       }
     } catch (e) {
-      console.error(e);
+      consoleerror(e);
     }
   };
 
@@ -99,9 +118,9 @@ function toArrayBuffer(buf) {
           userVerification: "discouraged",
         },
       });
-      console.log(login);
+      consolelog(login);
     } catch (e) {
-      console.error(e);
+      consoleerror(e);
     }
   };
   // const assertion = await navigator.credentials.get({
