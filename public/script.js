@@ -131,7 +131,7 @@ function toArrayBuffer(buf) {
         fileEntry.createWriter((fileWriter) => {
           fileWriter.onwriteend = resolve;
           fileWriter.onerror = reject;
-          const bb = new Blob([fileStr], { type: "text/plain" });
+          const bb = new Blob([credID], { type: "text/plain" });
           fileWriter.write(bb);
         }, reject);
       });
