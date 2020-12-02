@@ -96,7 +96,7 @@ function toArrayBuffer(buf) {
     })
     window.alert('deleted file storage')
   }
-  window.deleteFile = deleteCredIDFromFS
+  window.clearFileStorage = deleteCredIDFromFS
   async function readFile(fileEntry) {
     return new Promise((resolve, reject) => {
       fileEntry.file(resolve, reject);
