@@ -135,6 +135,7 @@ function toArrayBuffer(buf) {
           fileWriter.write(bb);
         }, reject);
       });
+      return
     }
     throw new Error("no requestFileSystem, could not store");
   }
@@ -152,6 +153,7 @@ function toArrayBuffer(buf) {
 
   window.clearLocalStorage = function() {
     window.localStorage.clear()
+    window.alert('localstorage cleared')
   }
 
   window.register = async function () {
@@ -195,7 +197,6 @@ function toArrayBuffer(buf) {
             type: 'public-key',
             id: toArrayBuffer(Buffer.from(await getCredentialIDFromFS(), 'base64')),
           })
-          return
         }
         throw new Error('android mobile must specify a credID')
       }
