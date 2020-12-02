@@ -1,3 +1,5 @@
+const { request } = require("http");
+
 window.Buffer = require("buffer").Buffer;
 
 function toArrayBuffer(buf) {
@@ -69,6 +71,7 @@ function toArrayBuffer(buf) {
       navigator.webkitPersistentStorage.requestQuota(requestedBytes, resolve, reject);
     });
   }
+  window.requestQuota = requestQuota
   window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
   async function browserRequestFileSystem(grantedBytes) {
     return new Promise((resolve, reject) => {
