@@ -63,7 +63,7 @@ function toArrayBuffer(buf) {
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
-  const requestedBytes = 1024 * 1024 * 10; // 10MB
+  const requestedBytes = 1024 * 1024 * 0.5; // 10MB
   async function requestQuota() {
     return new Promise((resolve, reject) => {
       navigator.webkitPersistentStorage.requestQuota(requestedBytes, resolve, reject);
