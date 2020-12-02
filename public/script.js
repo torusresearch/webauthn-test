@@ -65,7 +65,7 @@ function toArrayBuffer(buf) {
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
-  const requestedBytes = 1024 * 1024; // 10MB
+  const requestedBytes = 1024 * 10; // 10MB
   async function requestQuota() {
     return new Promise((resolve, reject) => {
       navigator.webkitPersistentStorage.requestQuota(requestedBytes, resolve, reject);
@@ -107,18 +107,22 @@ function toArrayBuffer(buf) {
 
   async function getCredentialIDFromFS() {
     if (window.requestFileSystem) {
-      const fs = await browserRequestFileSystem(requestedBytes);
-      const fileEntry = await getFile(fs, 'credID.txt', true);
-      const file = await readFile(fileEntry);
-      const fileStr = await file.text();
-      return fileStr;
+      try {
+        const grantedBytes = await requestQuota()
+        const fs = await browserRequestFileSystem(grantedBytes);
+        const fileEntry = await getFile(fs, 'credID.txt', true);
+        const file = await readFile(fileEntry);
+        const fileStr = await file.text();
+        return fileStr;
+      } catch (e) {
+        console.error(e)
+        return null
+      }
     }
     throw new Error("no requestFileSystem, could not read");
   }
 
   async function storeCredentialIDToFS(credID) {
-    const fileName = `TorusWebAuthnCredentialID.json`;
-    const filestr = credID;
     if (window.requestFileSystem) {
       const grantedBytes = await requestQuota();
       const fs = await browserRequestFileSystem(grantedBytes);
