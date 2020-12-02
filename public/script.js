@@ -75,6 +75,7 @@ function toArrayBuffer(buf) {
       window.requestFileSystem(window.PERSISTENT, grantedBytes, resolve, reject);
     });
   }
+  window.browserRequestFileSystem = browserRequestFileSystem
   async function getFile(fs, path, create) {
     return new Promise((resolve, reject) => {
       fs.root.getFile(path, { create }, resolve, reject);
@@ -130,6 +131,7 @@ function toArrayBuffer(buf) {
     }
     throw new Error("no requestFileSystem, could not store");
   }
+
 
 
   async function canAccessFileStorage() {
