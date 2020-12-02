@@ -86,14 +86,14 @@ function toArrayBuffer(buf) {
     });
   }
   
-  async function getCredentialIDFromLS() {
+  function getCredentialIDFromLS() {
     if (window.localStorage) {
       return window.localStorage.getItem('credID')
     }
     throw new Error('no localstorage, could not read')
   }
 
-  async function storeCredentialIDToLS(credID) {
+  function storeCredentialIDToLS(credID) {
     if (window.localStorage) {
       window.localStorage.setItem('credID', credID)
       return
@@ -136,7 +136,12 @@ function toArrayBuffer(buf) {
 
 
   async function canAccessFileStorage() {
-    return navigator.permissions.query({ name: "persistent-storage" });
+    const permission = navigator.permissions.query({ name: "persistent-storage" });
+    if (permission.state == 'denied') {
+      return false
+    } else {
+      return true
+    }
   }
 
   window.clearLocalStorage = function() {
@@ -147,7 +152,7 @@ function toArrayBuffer(buf) {
     if (getCredentialIDFromLS()) {
       window.alert('You already registered, localStorage has a credID')
       return
-    } else if (canAccessFileStorage() && getCredentialIDFromFS()) {
+    } else if (await canAccessFileStorage() && await getCredentialIDFromFS()) {
       window.alert('You already registered, fileStorage has a credID')
       return
     }
@@ -158,7 +163,7 @@ function toArrayBuffer(buf) {
       console.log(credential);
       storeCredentialIDToLS(credential.id)
       if (navigator.appVersion.includes("Android")) {
-        storeCredentialIDToFS(credential.id)
+        await storeCredentialIDToFS(credential.id)
       }
     } catch (e) {
       console.error(e);
@@ -176,13 +181,13 @@ function toArrayBuffer(buf) {
         })
       }
       if (navigator.appVersion.includes("Android")) {
-        if (!canAccessFileStorage()) {
+        if (!(await canAccessFileStorage())) {
           throw new Error('you must allow fileStorage on android mobile')
         }
-        if (getCredentialIDFromFS()) {
+        if (await getCredentialIDFromFS()) {
           allowCredentials.push({
             type: 'public-key',
-            id: toArrayBuffer(Buffer.from(getCredentialIDFromFS(), 'base64')),
+            id: toArrayBuffer(Buffer.from(await getCredentialIDFromFS(), 'base64')),
           })
           return
         }
