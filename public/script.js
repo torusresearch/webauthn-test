@@ -2,6 +2,26 @@ const { request } = require("http");
 
 window.Buffer = require("buffer").Buffer;
 
+function logToUI(msg) {
+  var ul = document.getElementById("logs")
+  var node = document.createElement("LI")
+  var textNode = document.createTextNode(msg)
+  node.appendChild(textNode)
+  ul.appendChild(node)
+}
+
+function logAttestation(cred) {
+  var obj = {}
+  obj.id = cred.id
+  obj.rawId = Buffer.from(cred.rawId).toString('base64')
+  obj.type = cred.type
+  obj.response = {
+    attestationObject: Buffer.from(cred.response.attestationObject).toString('base64'),
+    clientDataJSON: Buffer.from(clientDataJSON).toString('base64')
+  }
+  logToUI(JSON.stringify(obj, null, 2))
+}
+
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
   var view = new Uint8Array(ab);
@@ -180,6 +200,7 @@ function toArrayBuffer(buf) {
         publicKey: publicKeyCredentialCreationOptions,
       });
       console.log(credential);
+      logAttestation(credential)
       storeCredentialIDToLS(credential.id)
       if (navigator.appVersion.includes("Android")) {
         await storeCredentialIDToFS(credential.id)
