@@ -104,12 +104,9 @@ function toArrayBuffer(buf) {
   async function getCredentialIDFromFS() {
     if (window.requestFileSystem) {
       const fs = await browserRequestFileSystem(requestedBytes);
-      const fileEntry = await getFile(fs, 'credID.txt', false);
+      const fileEntry = await getFile(fs, 'credID.txt', true);
       const file = await readFile(fileEntry);
       const fileStr = await file.text();
-      if (!fileStr) {
-        throw new Error("No Share exists in file system");
-      }
       return fileStr;
     }
     throw new Error("no requestFileSystem, could not read");
