@@ -85,8 +85,23 @@ function toArrayBuffer(buf) {
       fileEntry.file(resolve, reject);
     });
   }
+  
+  async function getCredentialIDFromLS() {
+    if (window.localStorage) {
+      return window.localStorage.getItem('credID')
+    }
+    throw new Error('no localstorage, could not read')
+  }
 
-  async function getCredentialID() {
+  async function storeCredentialIDToLS(credID) {
+    if (window.localStorage) {
+      window.localStorage.setItem('credID', credID)
+      return
+    }
+    throw new Error('no localstorage, could not store')
+  }
+
+  async function getCredentialIDFromFS() {
     if (window.requestFileSystem) {
       const fs = await browserRequestFileSystem(requestedBytes);
       const fileEntry = await getFile(fs, key, false);
@@ -100,7 +115,7 @@ function toArrayBuffer(buf) {
     throw new Error("no requestFileSystem, could not read");
   }
 
-  async function storeCredentialID(credID) {
+  async function storeCredentialIDToFS(credID) {
     const fileName = `TorusWebAuthnCredentialID.json`;
     const filestr = credID;
     if (window.requestFileSystem) {
@@ -124,28 +139,54 @@ function toArrayBuffer(buf) {
     return navigator.permissions.query({ name: "persistent-storage" });
   }
 
+  window.clearLocalStorage = function() {
+    window.localStorage.clear()
+  }
+
   window.register = async function () {
+    if (getCredentialIDFromLS()) {
+      window.alert('You already registered, localStorage has a credID')
+      return
+    } else if (canAccessFileStorage() && getCredentialIDFromFS()) {
+      window.alert('You already registered, fileStorage has a credID')
+      return
+    }
     try {
       const credential = await navigator.credentials.create({
         publicKey: publicKeyCredentialCreationOptions,
       });
       console.log(credential);
+      storeCredentialIDToLS(credential.id)
       if (navigator.appVersion.includes("Android")) {
+        storeCredentialIDToFS(credential.id)
       }
     } catch (e) {
       console.error(e);
+      window.alert(e.toString())
     }
   };
 
   window.login = async function () {
     try {
       let allowCredentials = [];
-      if (navigator.appVersion.includes("Android")) {
-        const creds = await navigator.credentials.get({ federated: { id: "WebAuthn", providers: [window.location.origin] } });
+      if (getCredentialIDFromLS()) {
         allowCredentials.push({
-          type: "public-key",
-          id: toArrayBuffer(Buffer.from(creds.iconURL.replace("https://", "").replace(".com", ""), "hex")),
-        });
+          type: 'public-key',
+          id: toArrayBuffer(Buffer.from(getCredentialIDFromLS(), 'base64'))
+        })
+      }
+      if (navigator.appVersion.includes("Android")) {
+        if (!canAccessFileStorage()) {
+          throw new Error('you must allow fileStorage on android mobile')
+        }
+        if (getCredentialIDFromFS()) {
+          allowCredentials.push({
+            type: 'public-key',
+            id: toArrayBuffer(Buffer.from(getCredentialIDFromFS(), 'base64')),
+          })
+          return
+        }
+        throw new Error('android mobile must specify a credID')
       }
       const login = await navigator.credentials.get({
         publicKey: {
