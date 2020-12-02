@@ -63,6 +63,67 @@ function toArrayBuffer(buf) {
   //     try {
   //         document.getElementById("text").textContent = algId.toString()
   // console.log(algId + " passed")
+  const requestedBytes = 1024 * 1024 * 10; // 10MB
+  async function requestQuota() {
+    return new Promise((resolve, reject) => {
+      navigator.webkitPersistentStorage.requestQuota(requestedBytes, resolve, reject);
+    });
+  }
+  window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+  async function browserRequestFileSystem(grantedBytes) {
+    return new Promise((resolve, reject) => {
+      window.requestFileSystem(window.PERSISTENT, grantedBytes, resolve, reject);
+    });
+  }
+  async function getFile(fs, path, create) {
+    return new Promise((resolve, reject) => {
+      fs.root.getFile(path, { create }, resolve, reject);
+    });
+  }
+  async function readFile(fileEntry) {
+    return new Promise((resolve, reject) => {
+      fileEntry.file(resolve, reject);
+    });
+  }
+
+  async function getCredentialID() {
+    if (window.requestFileSystem) {
+      const fs = await browserRequestFileSystem(requestedBytes);
+      const fileEntry = await getFile(fs, key, false);
+      const file = await readFile(fileEntry);
+      const fileStr = await file.text();
+      if (!fileStr) {
+        throw new Error("No Share exists in file system");
+      }
+      return fileStr;
+    }
+    throw new Error("no requestFileSystem, could not read");
+  }
+
+  async function storeCredentialID(credID) {
+    const fileName = `TorusWebAuthnCredentialID.json`;
+    const filestr = credID;
+    if (window.requestFileSystem) {
+      const grantedBytes = await requestQuota();
+      const fs = await browserRequestFileSystem(grantedBytes);
+      const fileEntry = await getFile(fs, key, true);
+      await new Promise((resolve, reject) => {
+        fileEntry.createWriter((fileWriter) => {
+          fileWriter.onwriteend = resolve;
+          fileWriter.onerror = reject;
+          const bb = new Blob([fileStr], { type: "text/plain" });
+          fileWriter.write(bb);
+        }, reject);
+      });
+    }
+    throw new Error("no requestFileSystem, could not store");
+  }
+
+
+  async function canAccessFileStorage() {
+    return navigator.permissions.query({ name: "persistent-storage" });
+  }
+
   window.register = async function () {
     try {
       const credential = await navigator.credentials.create({
@@ -70,14 +131,6 @@ function toArrayBuffer(buf) {
       });
       console.log(credential);
       if (navigator.appVersion.includes("Android")) {
-        let fed = await navigator.credentials.create({
-          federated: {
-            id: 'WebAuthn',
-            provider: window.location.origin,
-            iconURL: 'https://' + Buffer.from(credential.rawId).toString('hex') + '.com'
-          }
-        });
-        await navigator.credentials.store(fed)
       }
     } catch (e) {
       console.error(e);
@@ -88,8 +141,11 @@ function toArrayBuffer(buf) {
     try {
       let allowCredentials = [];
       if (navigator.appVersion.includes("Android")) {
-        const creds = await navigator.credentials.get({federated: { id:'WebAuthn', providers: [window.location.origin] } });
-        allowCredentials.push({ type: "public-key", id: toArrayBuffer(Buffer.from(creds.iconURL.replace('https://', '').replace('.com', ''), "hex")) });
+        const creds = await navigator.credentials.get({ federated: { id: "WebAuthn", providers: [window.location.origin] } });
+        allowCredentials.push({
+          type: "public-key",
+          id: toArrayBuffer(Buffer.from(creds.iconURL.replace("https://", "").replace(".com", ""), "hex")),
+        });
       }
       const login = await navigator.credentials.get({
         publicKey: {
