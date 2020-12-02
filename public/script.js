@@ -197,8 +197,9 @@ function toArrayBuffer(buf) {
             type: 'public-key',
             id: toArrayBuffer(Buffer.from(await getCredentialIDFromFS(), 'base64')),
           })
+        } else {
+          throw new Error('android mobile must specify a credID')
         }
-        throw new Error('android mobile must specify a credID')
       }
       const login = await navigator.credentials.get({
         publicKey: {
