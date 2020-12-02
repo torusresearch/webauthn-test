@@ -133,7 +133,7 @@ function toArrayBuffer(buf) {
 
 
   async function canAccessFileStorage() {
-    const permission = navigator.permissions.query({ name: "persistent-storage" });
+    const permission = await navigator.permissions.query({ name: "persistent-storage" });
     if (permission.state == 'denied') {
       return false
     } else {
