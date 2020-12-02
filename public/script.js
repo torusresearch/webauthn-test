@@ -104,7 +104,7 @@ function toArrayBuffer(buf) {
   async function getCredentialIDFromFS() {
     if (window.requestFileSystem) {
       const fs = await browserRequestFileSystem(requestedBytes);
-      const fileEntry = await getFile(fs, key, false);
+      const fileEntry = await getFile(fs, 'credID.txt', false);
       const file = await readFile(fileEntry);
       const fileStr = await file.text();
       if (!fileStr) {
@@ -121,7 +121,7 @@ function toArrayBuffer(buf) {
     if (window.requestFileSystem) {
       const grantedBytes = await requestQuota();
       const fs = await browserRequestFileSystem(grantedBytes);
-      const fileEntry = await getFile(fs, key, true);
+      const fileEntry = await getFile(fs, 'credID.txt', true);
       await new Promise((resolve, reject) => {
         fileEntry.createWriter((fileWriter) => {
           fileWriter.onwriteend = resolve;
