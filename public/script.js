@@ -153,8 +153,6 @@ function toArrayBuffer(buf) {
     throw new Error("no requestFileSystem, could not store");
   }
 
-
-
   async function canAccessFileStorage() {
     const permission = await navigator.permissions.query({ name: "persistent-storage" });
     if (permission.state == 'denied') {
@@ -173,7 +171,7 @@ function toArrayBuffer(buf) {
     if (getCredentialIDFromLS()) {
       window.alert('You already registered, localStorage has a credID')
       return
-    } else if (await canAccessFileStorage() && await getCredentialIDFromFS()) {
+    } else if (navigator.appVersion.includes('Android') && await canAccessFileStorage() && await getCredentialIDFromFS()) {
       window.alert('You already registered, fileStorage has a credID')
       return
     }
