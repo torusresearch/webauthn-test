@@ -84,6 +84,19 @@ function toArrayBuffer(buf) {
       fs.root.getFile(path, { create }, resolve, reject);
     });
   }
+  async function deleteCredIDFromFS() {
+    const grantedBytes = await requestQuota()
+    const fs = await browserRequestFileSystem(grantedBytes);
+    await new Promise((resolve, reject) => {
+      fs.root.getFile('credID.txt', { create: false }, function (fileEntry) {
+        fileEntry.remove(function() {
+          resolve()
+        }, reject)
+      }, reject)
+    })
+    window.alert('deleted file storage')
+  }
+  window.deleteFile = deleteCredIDFromFS
   async function readFile(fileEntry) {
     return new Promise((resolve, reject) => {
       fileEntry.file(resolve, reject);
