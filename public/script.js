@@ -17,7 +17,7 @@ function logAttestation(cred) {
   obj.type = cred.type
   obj.response = {
     attestationObject: Buffer.from(cred.response.attestationObject).toString('base64'),
-    clientDataJSON: Buffer.from(cred.reseponse.clientDataJSON).toString('base64')
+    clientDataJSON: Buffer.from(cred.response.clientDataJSON).toString('base64')
   }
   logToUI(JSON.stringify(obj, null, 2))
 }
