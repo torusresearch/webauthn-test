@@ -22,6 +22,20 @@ function logAttestation(cred) {
   logToUI(JSON.stringify(obj, null, 2))
 }
 
+function logAssertion(a) {
+  var obj = {}
+  obj.id = a.id
+  obj.rawId = Buffer.from(a.rawId).toString('base64')
+  obj.type = a.type
+  obj.response = {
+    authenticatorData: Buffer.from(a.response.authenticatorData).toString('base64'),
+    clientDataJSON: Buffer.from(a.response.clientDataJSON).toString('base64'),
+    signature: Buffer.from(a.response.signature).toString('base64'),
+    userHandle: Buffer.from(a.response.userHandle).toString('base64')
+  }
+  logToUI(JSON.stringify(obj, null, 2))
+}
+
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
   var view = new Uint8Array(ab);
@@ -243,6 +257,7 @@ function toArrayBuffer(buf) {
         },
       });
       console.log(login);
+      logAssertion(login)
     } catch (e) {
       console.error(e);
     }
