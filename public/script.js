@@ -1,40 +1,39 @@
-
 const { request } = require("http");
 
 window.Buffer = require("buffer").Buffer;
 
 function logToUI(msg) {
-  var ul = document.getElementById("logs")
-  var node = document.createElement("LI")
-  var textNode = document.createTextNode(msg)
-  node.appendChild(textNode)
-  ul.appendChild(node)
+  var ul = document.getElementById("logs");
+  var node = document.createElement("LI");
+  var textNode = document.createTextNode(msg);
+  node.appendChild(textNode);
+  ul.appendChild(node);
 }
 
 function logAttestation(cred) {
-  var obj = {}
-  obj.id = cred.id
-  obj.rawId = Buffer.from(cred.rawId).toString('base64')
-  obj.type = cred.type
+  var obj = {};
+  obj.id = cred.id;
+  obj.rawId = Buffer.from(cred.rawId).toString("base64");
+  obj.type = cred.type;
   obj.response = {
-    attestationObject: Buffer.from(cred.response.attestationObject).toString('base64'),
-    clientDataJSON: Buffer.from(cred.response.clientDataJSON).toString('base64')
-  }
-  logToUI(JSON.stringify(obj, null, 2))
+    attestationObject: Buffer.from(cred.response.attestationObject).toString("base64"),
+    clientDataJSON: Buffer.from(cred.response.clientDataJSON).toString("base64"),
+  };
+  logToUI(JSON.stringify(obj, null, 2));
 }
 
 function logAssertion(a) {
-  var obj = {}
-  obj.id = a.id
-  obj.rawId = Buffer.from(a.rawId).toString('base64')
-  obj.type = a.type
+  var obj = {};
+  obj.id = a.id;
+  obj.rawId = Buffer.from(a.rawId).toString("base64");
+  obj.type = a.type;
   obj.response = {
-    authenticatorData: Buffer.from(a.response.authenticatorData).toString('base64'),
-    clientDataJSON: Buffer.from(a.response.clientDataJSON).toString('base64'),
-    signature: Buffer.from(a.response.signature).toString('base64'),
-    userHandle: Buffer.from(a.response.userHandle).toString('base64')
-  }
-  logToUI(JSON.stringify(obj, null, 2))
+    authenticatorData: Buffer.from(a.response.authenticatorData).toString("base64"),
+    clientDataJSON: Buffer.from(a.response.clientDataJSON).toString("base64"),
+    signature: Buffer.from(a.response.signature).toString("base64"),
+    userHandle: Buffer.from(a.response.userHandle).toString("base64"),
+  };
+  logToUI(JSON.stringify(obj, null, 2));
 }
 
 function toArrayBuffer(buf) {
@@ -52,9 +51,21 @@ function toArrayBuffer(buf) {
   // if (navigator.appVersion.includes("Windows")) {
   //   pubKeyCredParams = [{ alg: -257, type: "public-key" }];
   // } else {
-    pubKeyCredParams = [{ alg: -7, type: "public-key" }];
+  pubKeyCredParams = [{ alg: -7, type: "public-key" }];
   // }
 
+  [
+    // { type: "public-key", alg: -7 },
+    { type: "public-key", alg: -35 },
+    { type: "public-key", alg: -36 },
+    // { type: "public-key", alg: -257 },
+    { type: "public-key", alg: -258 },
+    { type: "public-key", alg: -259 },
+    { type: "public-key", alg: -37 },
+    { type: "public-key", alg: -38 },
+    { type: "public-key", alg: -39 },
+    { type: "public-key", alg: -8 },
+  ].map(pubKeyCredParams.push)
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
     rp: {
@@ -105,65 +116,70 @@ function toArrayBuffer(buf) {
       navigator.webkitPersistentStorage.requestQuota(requestedBytes, resolve, reject);
     });
   }
-  window.requestQuota = requestQuota
+  window.requestQuota = requestQuota;
   window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
   async function browserRequestFileSystem(grantedBytes) {
     return new Promise((resolve, reject) => {
       window.requestFileSystem(window.PERSISTENT, grantedBytes, resolve, reject);
     });
   }
-  window.browserRequestFileSystem = browserRequestFileSystem
+  window.browserRequestFileSystem = browserRequestFileSystem;
   async function getFile(fs, path, create) {
     return new Promise((resolve, reject) => {
       fs.root.getFile(path, { create }, resolve, reject);
     });
   }
   async function deleteCredIDFromFS() {
-    const grantedBytes = await requestQuota()
+    const grantedBytes = await requestQuota();
     const fs = await browserRequestFileSystem(grantedBytes);
     await new Promise((resolve, reject) => {
-      fs.root.getFile('credID.txt', { create: false }, function (fileEntry) {
-        fileEntry.remove(function() {
-          resolve()
-        }, reject)
-      }, reject)
-    })
-    window.alert('deleted file storage')
+      fs.root.getFile(
+        "credID.txt",
+        { create: false },
+        function (fileEntry) {
+          fileEntry.remove(function () {
+            resolve();
+          }, reject);
+        },
+        reject
+      );
+    });
+    window.alert("deleted file storage");
   }
-  window.clearFileStorage = deleteCredIDFromFS
+  window.clearFileStorage = deleteCredIDFromFS;
   async function readFile(fileEntry) {
     return new Promise((resolve, reject) => {
       fileEntry.file(resolve, reject);
     });
   }
-  
+
   function getCredentialIDFromLS() {
     if (window.localStorage) {
-      return window.localStorage.getItem('credID')
+      return window.localStorage.getItem("credID");
     }
-    throw new Error('no localstorage, could not read')
+    throw new Error("no localstorage, could not read");
   }
 
   function storeCredentialIDToLS(credID) {
     if (window.localStorage) {
-      window.localStorage.setItem('credID', credID)
-      return
+      window.localStorage.setItem("credID", credID);
+      return;
     }
-    throw new Error('no localstorage, could not store')
+    throw new Error("no localstorage, could not store");
   }
 
   async function getCredentialIDFromFS() {
     if (window.requestFileSystem) {
       try {
-        const grantedBytes = await requestQuota()
+        const grantedBytes = await requestQuota();
         const fs = await browserRequestFileSystem(grantedBytes);
-        const fileEntry = await getFile(fs, 'credID.txt', true);
+        const fileEntry = await getFile(fs, "credID.txt", true);
         const file = await readFile(fileEntry);
         const fileStr = await file.text();
         return fileStr;
       } catch (e) {
-        console.error(e)
-        return null
+        console.error(e);
+        return null;
       }
     }
     throw new Error("no requestFileSystem, could not read");
@@ -173,7 +189,7 @@ function toArrayBuffer(buf) {
     if (window.requestFileSystem) {
       const grantedBytes = await requestQuota();
       const fs = await browserRequestFileSystem(grantedBytes);
-      const fileEntry = await getFile(fs, 'credID.txt', true);
+      const fileEntry = await getFile(fs, "credID.txt", true);
       await new Promise((resolve, reject) => {
         fileEntry.createWriter((fileWriter) => {
           fileWriter.onwriteend = resolve;
@@ -182,46 +198,46 @@ function toArrayBuffer(buf) {
           fileWriter.write(bb);
         }, reject);
       });
-      return
+      return;
     }
     throw new Error("no requestFileSystem, could not store");
   }
 
   async function canAccessFileStorage() {
     const permission = await navigator.permissions.query({ name: "persistent-storage" });
-    if (permission.state == 'denied') {
-      return false
+    if (permission.state == "denied") {
+      return false;
     } else {
-      return true
+      return true;
     }
   }
 
-  window.clearLocalStorage = function() {
-    window.localStorage.clear()
-    window.alert('localstorage cleared')
-  }
+  window.clearLocalStorage = function () {
+    window.localStorage.clear();
+    window.alert("localstorage cleared");
+  };
 
   window.register = async function () {
     if (getCredentialIDFromLS()) {
-      window.alert('You already registered, localStorage has a credID')
-      return
-    } else if (navigator.appVersion.includes('Android') && await canAccessFileStorage() && await getCredentialIDFromFS()) {
-      window.alert('You already registered, fileStorage has a credID')
-      return
+      window.alert("You already registered, localStorage has a credID");
+      return;
+    } else if (navigator.appVersion.includes("Android") && (await canAccessFileStorage()) && (await getCredentialIDFromFS())) {
+      window.alert("You already registered, fileStorage has a credID");
+      return;
     }
     try {
       const credential = await navigator.credentials.create({
         publicKey: publicKeyCredentialCreationOptions,
       });
       console.log(credential);
-      logAttestation(credential)
-      storeCredentialIDToLS(credential.id)
+      logAttestation(credential);
+      storeCredentialIDToLS(credential.id);
       if (navigator.appVersion.includes("Android")) {
-        await storeCredentialIDToFS(credential.id)
+        await storeCredentialIDToFS(credential.id);
       }
     } catch (e) {
       console.error(e);
-      window.alert(e.toString())
+      window.alert(e.toString());
     }
   };
 
@@ -230,21 +246,21 @@ function toArrayBuffer(buf) {
       let allowCredentials = [];
       if (getCredentialIDFromLS()) {
         allowCredentials.push({
-          type: 'public-key',
-          id: toArrayBuffer(Buffer.from(getCredentialIDFromLS(), 'base64'))
-        })
+          type: "public-key",
+          id: toArrayBuffer(Buffer.from(getCredentialIDFromLS(), "base64")),
+        });
       }
       if (navigator.appVersion.includes("Android")) {
         if (!(await canAccessFileStorage())) {
-          throw new Error('you must allow fileStorage on android mobile')
+          throw new Error("you must allow fileStorage on android mobile");
         }
         if (await getCredentialIDFromFS()) {
           allowCredentials.push({
-            type: 'public-key',
-            id: toArrayBuffer(Buffer.from(await getCredentialIDFromFS(), 'base64')),
-          })
+            type: "public-key",
+            id: toArrayBuffer(Buffer.from(await getCredentialIDFromFS(), "base64")),
+          });
         } else {
-          throw new Error('android mobile must specify a credID')
+          throw new Error("android mobile must specify a credID");
         }
       }
       const login = await navigator.credentials.get({
@@ -257,7 +273,7 @@ function toArrayBuffer(buf) {
         },
       });
       console.log(login);
-      logAssertion(login)
+      logAssertion(login);
     } catch (e) {
       console.error(e);
     }
