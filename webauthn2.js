@@ -3,64 +3,63 @@ const base64url = require("base64url");
 const cbor = require("cbor");
 const jsrsasign = require("jsrsasign");
 const elliptic = require("elliptic");
-const NodeRSA = require('node-rsa')
-const forge = require('node-forge')
-const BN = require('bn.js')
-const vanillacbor   = require('./vanillacbor');
+const NodeRSA = require("node-rsa");
+const forge = require("node-forge");
+const BN = require("bn.js");
+const vanillacbor = require("./vanillacbor");
 
-const parseAuthData = (buffer) => {
-    if(buffer.byteLength < 37)
-        throw new Error('Authenticator Data must be at least 37 bytes long!');
+// const parseAuthData = (buffer) => {
+//     if(buffer.byteLength < 37)
+//         throw new Error('Authenticator Data must be at least 37 bytes long!');
 
-    let rpIdHash      = buffer.slice(0, 32);             buffer = buffer.slice(32);
+//     let rpIdHash      = buffer.slice(0, 32);             buffer = buffer.slice(32);
 
-    /* Flags */
-    let flagsBuffer   = buffer.slice(0, 1);              buffer = buffer.slice(1);
-    let flagsInt      = flagsBuffer[0];
-    let up            = !!(flagsInt & 0x01); // Test of User Presence
-    let uv            = !!(flagsInt & 0x04); // User Verification
-    let at            = !!(flagsInt & 0x40); // Attestation data
-    let ed            = !!(flagsInt & 0x80); // Extension data
-    let flags = {up, uv, at, ed, flagsInt};
+//     /* Flags */
+//     let flagsBuffer   = buffer.slice(0, 1);              buffer = buffer.slice(1);
+//     let flagsInt      = flagsBuffer[0];
+//     let up            = !!(flagsInt & 0x01); // Test of User Presence
+//     let uv            = !!(flagsInt & 0x04); // User Verification
+//     let at            = !!(flagsInt & 0x40); // Attestation data
+//     let ed            = !!(flagsInt & 0x80); // Extension data
+//     let flags = {up, uv, at, ed, flagsInt};
 
-    let counterBuffer = buffer.slice(0, 4);               buffer = buffer.slice(4);
-    let counter       = counterBuffer.readUInt32BE(0);
+//     let counterBuffer = buffer.slice(0, 4);               buffer = buffer.slice(4);
+//     let counter       = counterBuffer.readUInt32BE(0);
 
-    /* Attested credential data */
-    let aaguid              = undefined;
-    let aaguidBuffer        = undefined;
-    let credIdBuffer        = undefined;
-    let cosePublicKeyBuffer = undefined;
-    let attestationMinLen   = 16 + 2 + 16 + 77; // aaguid + credIdLen + credId + pk
+//     /* Attested credential data */
+//     let aaguid              = undefined;
+//     let aaguidBuffer        = undefined;
+//     let credIdBuffer        = undefined;
+//     let cosePublicKeyBuffer = undefined;
+//     let attestationMinLen   = 16 + 2 + 16 + 77; // aaguid + credIdLen + credId + pk
 
+//     if(at) { // Attested Data
+//         if(buffer.byteLength < attestationMinLen)
+//             throw new Error(`It seems as the Attestation Data flag is set, but the remaining data is smaller than ${attestationMinLen} bytes. You might have set AT flag for the assertion response.`)
 
-    if(at) { // Attested Data
-        if(buffer.byteLength < attestationMinLen)
-            throw new Error(`It seems as the Attestation Data flag is set, but the remaining data is smaller than ${attestationMinLen} bytes. You might have set AT flag for the assertion response.`)
+//         aaguid              = buffer.slice(0, 16).toString('hex'); buffer = buffer.slice(16);
+//         aaguidBuffer        = `${aaguid.slice(0, 8)}-${aaguid.slice(8, 12)}-${aaguid.slice(12, 16)}-${aaguid.slice(16, 20)}-${aaguid.slice(20)}`;
 
-        aaguid              = buffer.slice(0, 16).toString('hex'); buffer = buffer.slice(16);
-        aaguidBuffer        = `${aaguid.slice(0, 8)}-${aaguid.slice(8, 12)}-${aaguid.slice(12, 16)}-${aaguid.slice(16, 20)}-${aaguid.slice(20)}`;
+//         let credIdLenBuffer = buffer.slice(0, 2);                  buffer = buffer.slice(2);
+//         let credIdLen       = credIdLenBuffer.readUInt16BE(0);
+//         credIdBuffer        = buffer.slice(0, credIdLen);          buffer = buffer.slice(credIdLen);
 
-        let credIdLenBuffer = buffer.slice(0, 2);                  buffer = buffer.slice(2);
-        let credIdLen       = credIdLenBuffer.readUInt16BE(0);
-        credIdBuffer        = buffer.slice(0, credIdLen);          buffer = buffer.slice(credIdLen);
+//         let pubKeyLength    = vanillacbor.decodeOnlyFirst(buffer).byteLength;
+//         cosePublicKeyBuffer = buffer.slice(0, pubKeyLength);       buffer = buffer.slice(pubKeyLength);
+//     }
 
-        let pubKeyLength    = vanillacbor.decodeOnlyFirst(buffer).byteLength;
-        cosePublicKeyBuffer = buffer.slice(0, pubKeyLength);       buffer = buffer.slice(pubKeyLength);
-    }
+//     let coseExtensionsDataBuffer = undefined;
+//     if(ed) { // Extension Data
+//         let extensionsDataLength = vanillacbor.decodeOnlyFirst(buffer).byteLength;
 
-    let coseExtensionsDataBuffer = undefined;
-    if(ed) { // Extension Data
-        let extensionsDataLength = vanillacbor.decodeOnlyFirst(buffer).byteLength;
+//         coseExtensionsDataBuffer = buffer.slice(0, extensionsDataLength); buffer = buffer.slice(extensionsDataLength);
+//     }
 
-        coseExtensionsDataBuffer = buffer.slice(0, extensionsDataLength); buffer = buffer.slice(extensionsDataLength);
-    }
+//     if(buffer.byteLength)
+//         throw new Error('Failed to decode authData! Leftover bytes been detected!');
 
-    if(buffer.byteLength)
-        throw new Error('Failed to decode authData! Leftover bytes been detected!');
-
-    return {rpIdHash, counter, flags, counterBuffer, aaguid, credIdBuffer, cosePublicKeyBuffer, coseExtensionsDataBuffer}
-}
+//     return {rpIdHash, counter, flags, counterBuffer, aaguid, credIdBuffer, cosePublicKeyBuffer, coseExtensionsDataBuffer}
+// }
 // const jwkToPem = require('jwk-to-pem')
 
 let TPM_ALG = {
@@ -72,10 +71,10 @@ let TPM_ALG = {
   0x0006: "TPM_ALG_AES",
   0x0007: "TPM_ALG_MGF1",
   0x0008: "TPM_ALG_KEYEDHASH",
-  0x000A: "TPM_ALG_XOR",
-  0x000B: "TPM_ALG_SHA256",
-  0x000C: "TPM_ALG_SHA384",
-  0x000D: "TPM_ALG_SHA512",
+  0x000a: "TPM_ALG_XOR",
+  0x000b: "TPM_ALG_SHA256",
+  0x000c: "TPM_ALG_SHA384",
+  0x000d: "TPM_ALG_SHA512",
   0x0010: "TPM_ALG_NULL",
   0x0012: "TPM_ALG_SM3_256",
   0x0013: "TPM_ALG_SM4",
@@ -85,10 +84,10 @@ let TPM_ALG = {
   0x0017: "TPM_ALG_OAEP",
   0x0018: "TPM_ALG_ECDSA",
   0x0019: "TPM_ALG_ECDH",
-  0x001A: "TPM_ALG_ECDAA",
-  0x001B: "TPM_ALG_SM2",
-  0x001C: "TPM_ALG_ECSCHNORR",
-  0x001D: "TPM_ALG_ECMQV",
+  0x001a: "TPM_ALG_ECDAA",
+  0x001b: "TPM_ALG_SM2",
+  0x001c: "TPM_ALG_ECSCHNORR",
+  0x001d: "TPM_ALG_ECMQV",
   0x0020: "TPM_ALG_KDF1_SP800_56A",
   0x0021: "TPM_ALG_KDF2",
   0x0022: "TPM_ALG_KDF1_SP800_108",
@@ -99,8 +98,8 @@ let TPM_ALG = {
   0x0041: "TPM_ALG_OFB",
   0x0042: "TPM_ALG_CBC",
   0x0043: "TPM_ALG_CFB",
-  0x0044: "TPM_ALG_ECB"
-}
+  0x0044: "TPM_ALG_ECB",
+};
 
 let TPM_ECC_CURVE = {
   0x0000: "TPM_ECC_NONE",
@@ -111,12 +110,12 @@ let TPM_ECC_CURVE = {
   0x0005: "TPM_ECC_NIST_P521",
   0x0010: "TPM_ECC_BN_P256",
   0x0011: "TPM_ECC_BN_P638",
-  0x0020: "TPM_ECC_SM2_P256"
-}
+  0x0020: "TPM_ECC_SM2_P256",
+};
 
 let TPM_CC = {
-  0x0000011F: "TPM_CC_FIRST",
-  0x0000011F: "TPM_CC_NV_UndefineSpaceSpecial",
+  0x0000011f: "TPM_CC_FIRST",
+  0x0000011f: "TPM_CC_NV_UndefineSpaceSpecial",
   0x00000120: "TPM_CC_EvictControl",
   0x00000121: "TPM_CC_HierarchyControl",
   0x00000122: "TPM_CC_NV_UndefineSpace",
@@ -126,12 +125,12 @@ let TPM_CC = {
   0x00000127: "TPM_CC_ClearControl",
   0x00000128: "TPM_CC_ClockSet",
   0x00000129: "TPM_CC_HierarchyChangeAuth",
-  0x0000012A: "TPM_CC_NV_DefineSpace",
-  0x0000012B: "TPM_CC_PCR_Allocate",
-  0x0000012C: "TPM_CC_PCR_SetAuthPolicy",
-  0x0000012D: "TPM_CC_PP_Commands",
-  0x0000012E: "TPM_CC_SetPrimaryPolicy",
-  0x0000012F: "TPM_CC_FieldUpgradeStart",
+  0x0000012a: "TPM_CC_NV_DefineSpace",
+  0x0000012b: "TPM_CC_PCR_Allocate",
+  0x0000012c: "TPM_CC_PCR_SetAuthPolicy",
+  0x0000012d: "TPM_CC_PP_Commands",
+  0x0000012e: "TPM_CC_SetPrimaryPolicy",
+  0x0000012f: "TPM_CC_FieldUpgradeStart",
   0x00000130: "TPM_CC_ClockRateAdjust",
   0x00000131: "TPM_CC_CreatePrimary",
   0x00000132: "TPM_CC_NV_GlobalWriteLock",
@@ -142,12 +141,12 @@ let TPM_CC = {
   0x00000137: "TPM_CC_NV_Write",
   0x00000138: "TPM_CC_NV_WriteLock",
   0x00000139: "TPM_CC_DictionaryAttackLockReset",
-  0x0000013A: "TPM_CC_DictionaryAttackParameters",
-  0x0000013B: "TPM_CC_NV_ChangeAuth",
-  0x0000013C: "TPM_CC_PCR_Event",
-  0x0000013D: "TPM_CC_PCR_Reset",
-  0x0000013E: "TPM_CC_SequenceComplete",
-  0x0000013F: "TPM_CC_SetAlgorithmSet",
+  0x0000013a: "TPM_CC_DictionaryAttackParameters",
+  0x0000013b: "TPM_CC_NV_ChangeAuth",
+  0x0000013c: "TPM_CC_PCR_Event",
+  0x0000013d: "TPM_CC_PCR_Reset",
+  0x0000013e: "TPM_CC_SequenceComplete",
+  0x0000013f: "TPM_CC_SetAlgorithmSet",
   0x00000140: "TPM_CC_SetCommandCodeAuditStatus",
   0x00000141: "TPM_CC_FieldUpgradeData",
   0x00000142: "TPM_CC_IncrementalSelfTest",
@@ -158,12 +157,12 @@ let TPM_CC = {
   0x00000147: "TPM_CC_ActivateCredential",
   0x00000148: "TPM_CC_Certify",
   0x00000149: "TPM_CC_PolicyNV",
-  0x0000014A: "TPM_CC_CertifyCreation",
-  0x0000014B: "TPM_CC_Duplicate",
-  0x0000014C: "TPM_CC_GetTime",
-  0x0000014D: "TPM_CC_GetSessionAuditDigest",
-  0x0000014E: "TPM_CC_NV_Read",
-  0x0000014F: "TPM_CC_NV_ReadLock",
+  0x0000014a: "TPM_CC_CertifyCreation",
+  0x0000014b: "TPM_CC_Duplicate",
+  0x0000014c: "TPM_CC_GetTime",
+  0x0000014d: "TPM_CC_GetSessionAuditDigest",
+  0x0000014e: "TPM_CC_NV_Read",
+  0x0000014f: "TPM_CC_NV_ReadLock",
   0x00000150: "TPM_CC_ObjectChangeAuth",
   0x00000151: "TPM_CC_PolicySecret",
   0x00000152: "TPM_CC_Rewrap",
@@ -174,10 +173,10 @@ let TPM_CC = {
   0x00000157: "TPM_CC_Load",
   0x00000158: "TPM_CC_Quote",
   0x00000159: "TPM_CC_RSA_Decrypt",
-  0x0000015B: "TPM_CC_HMAC_Start",
-  0x0000015C: "TPM_CC_SequenceUpdate",
-  0x0000015D: "TPM_CC_Sign",
-  0x0000015E: "TPM_CC_Unseal",
+  0x0000015b: "TPM_CC_HMAC_Start",
+  0x0000015c: "TPM_CC_SequenceUpdate",
+  0x0000015d: "TPM_CC_Sign",
+  0x0000015e: "TPM_CC_Unseal",
   0x00000161: "TPM_CC_PolicySigned",
   0x00000162: "TPM_CC_ContextLoad",
   0x00000163: "TPM_CC_ContextSave",
@@ -187,12 +186,12 @@ let TPM_CC = {
   0x00000167: "TPM_CC_LoadExternal",
   0x00000168: "TPM_CC_MakeCredential",
   0x00000169: "TPM_CC_NV_ReadPublic",
-  0x0000016A: "TPM_CC_PolicyAuthorize",
-  0x0000016B: "TPM_CC_PolicyAuthValue",
-  0x0000016C: "TPM_CC_PolicyCommandCode",
-  0x0000016D: "TPM_CC_PolicyCounterTimer",
-  0x0000016E: "TPM_CC_PolicyCpHash",
-  0x0000016F: "TPM_CC_PolicyLocality",
+  0x0000016a: "TPM_CC_PolicyAuthorize",
+  0x0000016b: "TPM_CC_PolicyAuthValue",
+  0x0000016c: "TPM_CC_PolicyCommandCode",
+  0x0000016d: "TPM_CC_PolicyCounterTimer",
+  0x0000016e: "TPM_CC_PolicyCpHash",
+  0x0000016f: "TPM_CC_PolicyLocality",
   0x00000170: "TPM_CC_PolicyNameHash",
   0x00000171: "TPM_CC_PolicyOR",
   0x00000172: "TPM_CC_PolicyTicket",
@@ -203,12 +202,12 @@ let TPM_CC = {
   0x00000177: "TPM_CC_ECC_Parameters",
   0x00000178: "TPM_CC_FirmwareRead",
   0x00000179: "TPM_CC_GetCapability",
-  0x0000017A: "TPM_CC_GetRandom",
-  0x0000017B: "TPM_CC_GetTestResult",
-  0x0000017C: "TPM_CC_Hash",
-  0x0000017D: "TPM_CC_PCR_Read",
-  0x0000017E: "TPM_CC_PolicyPCR",
-  0x0000017F: "TPM_CC_PolicyRestart",
+  0x0000017a: "TPM_CC_GetRandom",
+  0x0000017b: "TPM_CC_GetTestResult",
+  0x0000017c: "TPM_CC_Hash",
+  0x0000017d: "TPM_CC_PCR_Read",
+  0x0000017e: "TPM_CC_PolicyPCR",
+  0x0000017f: "TPM_CC_PolicyRestart",
   0x00000190: "TPM_CC_ReadClock",
   0x00000191: "TPM_CC_PCR_Extend",
   0x00000192: "TPM_CC_PCR_SetAuthValue",
@@ -218,21 +217,21 @@ let TPM_CC = {
   0x00000187: "TPM_CC_PolicyPhysicalPresence",
   0x00000188: "TPM_CC_PolicyDuplicationSelect",
   0x00000189: "TPM_CC_PolicyGetDigest",
-  0x0000018A: "TPM_CC_TestParms",
-  0x0000018B: "TPM_CC_Commit",
-  0x0000018C: "TPM_CC_PolicyPassword",
-  0x0000018D: "TPM_CC_ZGen_2Phase",
-  0x0000018E: "TPM_CC_EC_Ephemeral",
-  0x0000018F: "TPM_CC_PolicyNvWritten",
+  0x0000018a: "TPM_CC_TestParms",
+  0x0000018b: "TPM_CC_Commit",
+  0x0000018c: "TPM_CC_PolicyPassword",
+  0x0000018d: "TPM_CC_ZGen_2Phase",
+  0x0000018e: "TPM_CC_EC_Ephemeral",
+  0x0000018f: "TPM_CC_PolicyNvWritten",
   0x00000190: "TPM_CC_PolicyTemplate",
   0x00000191: "TPM_CC_CreateLoaded",
   0x00000192: "TPM_CC_PolicyAuthorizeNV",
-  0x00000193: "TPM_CC_EncryptDecrypt2"
-}
+  0x00000193: "TPM_CC_EncryptDecrypt2",
+};
 
 let TPM_ST = {
-  0x00C4: "TPM_ST_RSP_COMMAND",
-  0X8000: "TPM_ST_NULL",
+  0x00c4: "TPM_ST_RSP_COMMAND",
+  0x8000: "TPM_ST_NULL",
   0x8001: "TPM_ST_NO_SESSIONS",
   0x8002: "TPM_ST_SESSIONS",
   0x8014: "TPM_ST_ATTEST_NV",
@@ -241,70 +240,70 @@ let TPM_ST = {
   0x8017: "TPM_ST_ATTEST_CERTIFY",
   0x8018: "TPM_ST_ATTEST_QUOTE",
   0x8019: "TPM_ST_ATTEST_TIME",
-  0x801A: "TPM_ST_ATTEST_CREATION",
+  0x801a: "TPM_ST_ATTEST_CREATION",
   0x8021: "TPM_ST_CREATION",
   0x8022: "TPM_ST_VERIFIED",
   0x8023: "TPM_ST_AUTH_SECRET",
   0x8024: "TPM_ST_HASHCHECK",
   0x8025: "TPM_ST_AUTH_SIGNED",
-  0x8029: "TPM_ST_FU_MANIFEST"
-}
+  0x8029: "TPM_ST_FU_MANIFEST",
+};
 
 let FIDO_ALG_TO_COSE = {
-  "ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW": {
-      "kty": 2,
-      "alg": -7,
-      "crv": 1
+  ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW: {
+    kty: 2,
+    alg: -7,
+    crv: 1,
   },
-  "ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW": {
-      "kty": 2,
-      "alg": -7,
-      "crv": 8
+  ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW: {
+    kty: 2,
+    alg: -7,
+    crv: 8,
   },
-  "ALG_SIGN_RSASSA_PSS_SHA256_RAW": {
-      "kty": 3,
-      "alg": -37
+  ALG_SIGN_RSASSA_PSS_SHA256_RAW: {
+    kty: 3,
+    alg: -37,
   },
-  "ALG_SIGN_RSASSA_PSS_SHA384_RAW": {
-      "kty": 3,
-      "alg": -38
+  ALG_SIGN_RSASSA_PSS_SHA384_RAW: {
+    kty: 3,
+    alg: -38,
   },
-  "ALG_SIGN_RSASSA_PSS_SHA512_RAW": {
-      "kty": 3,
-      "alg": -39
+  ALG_SIGN_RSASSA_PSS_SHA512_RAW: {
+    kty: 3,
+    alg: -39,
   },
-  "ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW": {
-      "kty": 3,
-      "alg": -257
+  ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW: {
+    kty: 3,
+    alg: -257,
   },
-  "ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW": {
-      "kty": 3,
-      "alg": -258
+  ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW: {
+    kty: 3,
+    alg: -258,
   },
-  "ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW": {
-      "kty": 3,
-      "alg": -259
+  ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW: {
+    kty: 3,
+    alg: -259,
   },
-  "ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW": {
-      "kty": 3,
-      "alg": -65535
+  ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW: {
+    kty: 3,
+    alg: -65535,
   },
-  "ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW": {
-      "kty": 2,
-      "alg": -35,
-      "crv": 2
+  ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW: {
+    kty: 2,
+    alg: -35,
+    crv: 2,
   },
-  "ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW": {
-      "kty": 2,
-      "alg": -36,
-      "crv": 3
+  ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW: {
+    kty: 2,
+    alg: -36,
+    crv: 3,
   },
-  "ALG_SIGN_ED25519_EDDSA_SHA256_RAW": {
-      "kty": 1,
-      "alg": -8,
-      "crv": 6
-  }
-}
+  ALG_SIGN_ED25519_EDDSA_SHA256_RAW: {
+    kty: 1,
+    alg: -8,
+    crv: 6,
+  },
+};
 
 let COSE_TO_FIDO_ALG = {
   "kty:2,alg:-7,crv:1": "ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW",
@@ -318,149 +317,148 @@ let COSE_TO_FIDO_ALG = {
   "kty:3,alg:-65535": "ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW",
   "kty:2,alg:-35,crv:2": "ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW",
   "kty:2,alg:-36,crv:3": "ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW",
-  "kty:1,alg:-8,crv:6": "ALG_SIGN_ED25519_EDDSA_SHA256_RAW"
-}
+  "kty:1,alg:-8,crv:6": "ALG_SIGN_ED25519_EDDSA_SHA256_RAW",
+};
 
 let TPM_MANUFACTURERS = {
   "id:414D4400": {
-      "name":"AMD",
-      "id": "AMD"
+    name: "AMD",
+    id: "AMD",
   },
   "id:41544D4C": {
-      "name":"Atmel",
-      "id": "ATML"
+    name: "Atmel",
+    id: "ATML",
   },
   "id:4252434D": {
-      "name":"Broadcom",
-      "id": "BRCM"
+    name: "Broadcom",
+    id: "BRCM",
   },
   "id:49424d00": {
-      "name":"IBM",
-      "id": "IBM"
+    name: "IBM",
+    id: "IBM",
   },
   "id:49465800": {
-      "name":"Infineon",
-      "id": "IFX"
+    name: "Infineon",
+    id: "IFX",
   },
   "id:494E5443": {
-      "name":"Intel",
-      "id": "INTC"
+    name: "Intel",
+    id: "INTC",
   },
   "id:4C454E00": {
-      "name":"Lenovo",
-      "id": "LEN"
+    name: "Lenovo",
+    id: "LEN",
   },
   "id:4E534D20": {
-      "name":"National Semiconductor",
-      "id": "NSM"
+    name: "National Semiconductor",
+    id: "NSM",
   },
   "id:4E545A00": {
-      "name":"Nationz",
-      "id": "NTZ"
+    name: "Nationz",
+    id: "NTZ",
   },
   "id:4E544300": {
-      "name":"Nuvoton Technology",
-      "id": "NTC"
+    name: "Nuvoton Technology",
+    id: "NTC",
   },
   "id:51434F4D": {
-      "name":"Qualcomm",
-      "id": "QCOM"
+    name: "Qualcomm",
+    id: "QCOM",
   },
   "id:534D5343": {
-      "name":"SMSC",
-      "id": "SMSC"
+    name: "SMSC",
+    id: "SMSC",
   },
   "id:53544D20": {
-      "name":"ST Microelectronics",
-      "id": "STM"
+    name: "ST Microelectronics",
+    id: "STM",
   },
   "id:534D534E": {
-      "name":"Samsung",
-      "id": "SMSN"
+    name: "Samsung",
+    id: "SMSN",
   },
   "id:534E5300": {
-      "name":"Sinosun",
-      "id": "SNS"
+    name: "Sinosun",
+    id: "SNS",
   },
   "id:54584E00": {
-      "name":"Texas Instruments",
-      "id": "TXN"
+    name: "Texas Instruments",
+    id: "TXN",
   },
   "id:57454300": {
-      "name":"Winbond",
-      "id": "WEC"
+    name: "Winbond",
+    id: "WEC",
   },
   "id:524F4343": {
-      "name":"Fuzhouk Rockchip",
-      "id": "ROCC"
-  }
-}
+    name: "Fuzhouk Rockchip",
+    id: "ROCC",
+  },
+};
 
 const parsePubArea = (pubAreaBuffer) => {
   let typeBuffer = pubAreaBuffer.slice(0, 2);
   let type = TPM_ALG[typeBuffer.readUInt16BE(0)];
   pubAreaBuffer = pubAreaBuffer.slice(2);
 
-  let nameAlgBuffer = pubAreaBuffer.slice(0, 2)
+  let nameAlgBuffer = pubAreaBuffer.slice(0, 2);
   let nameAlg = TPM_ALG[nameAlgBuffer.readUInt16BE(0)];
   pubAreaBuffer = pubAreaBuffer.slice(2);
 
-  let objectAttributesBuffer = pubAreaBuffer.slice(0,4);
-  let objectAttributesInt    = objectAttributesBuffer.readUInt32BE(0);
+  let objectAttributesBuffer = pubAreaBuffer.slice(0, 4);
+  let objectAttributesInt = objectAttributesBuffer.readUInt32BE(0);
   let objectAttributes = {
-      fixedTPM:             !!(objectAttributesInt & 1),
-      stClear:              !!(objectAttributesInt & 2),
-      fixedParent:          !!(objectAttributesInt & 8),
-      sensitiveDataOrigin:  !!(objectAttributesInt & 16),
-      userWithAuth:         !!(objectAttributesInt & 32),
-      adminWithPolicy:      !!(objectAttributesInt & 64),
-      noDA:                 !!(objectAttributesInt & 512),
-      encryptedDuplication: !!(objectAttributesInt & 1024),
-      restricted:           !!(objectAttributesInt & 32768),
-      decrypt:              !!(objectAttributesInt & 65536),
-      signORencrypt:        !!(objectAttributesInt & 131072)
-  }
+    fixedTPM: !!(objectAttributesInt & 1),
+    stClear: !!(objectAttributesInt & 2),
+    fixedParent: !!(objectAttributesInt & 8),
+    sensitiveDataOrigin: !!(objectAttributesInt & 16),
+    userWithAuth: !!(objectAttributesInt & 32),
+    adminWithPolicy: !!(objectAttributesInt & 64),
+    noDA: !!(objectAttributesInt & 512),
+    encryptedDuplication: !!(objectAttributesInt & 1024),
+    restricted: !!(objectAttributesInt & 32768),
+    decrypt: !!(objectAttributesInt & 65536),
+    signORencrypt: !!(objectAttributesInt & 131072),
+  };
   pubAreaBuffer = pubAreaBuffer.slice(4);
 
   let authPolicyLength = pubAreaBuffer.slice(0, 2).readUInt16BE(0);
-  pubAreaBuffer  = pubAreaBuffer.slice(2);
+  pubAreaBuffer = pubAreaBuffer.slice(2);
   let authPolicy = pubAreaBuffer.slice(0, authPolicyLength);
-  pubAreaBuffer  = pubAreaBuffer.slice(authPolicyLength);
+  pubAreaBuffer = pubAreaBuffer.slice(authPolicyLength);
 
   let parameters = undefined;
-  if(type === 'TPM_ALG_RSA') {
-      parameters = {
-          symmetric: TPM_ALG[pubAreaBuffer.slice(0, 2).readUInt16BE(0)],
-          scheme:    TPM_ALG[pubAreaBuffer.slice(2, 4).readUInt16BE(0)],
-          keyBits:   pubAreaBuffer.slice(4, 6).readUInt16BE(0),
-          exponent:  pubAreaBuffer.slice(6, 10).readUInt32BE(0)
-      }
-      pubAreaBuffer  = pubAreaBuffer.slice(10);
-  } else if(type === 'TPM_ALG_ECC') {
-      parameters = {
-          symmetric: TPM_ALG[pubAreaBuffer.slice(0, 2).readUInt16BE(0)],
-          scheme:    TPM_ALG[pubAreaBuffer.slice(2, 4).readUInt16BE(0)],
-          curveID:   TPM_ECC_CURVE[pubAreaBuffer.slice(4, 6).readUInt16BE(0)],
-          kdf:       TPM_ALG[pubAreaBuffer.slice(6, 8).readUInt16BE(0)]
-      }
-      pubAreaBuffer  = pubAreaBuffer.slice(8);
-  } else 
-      throw new Error(type + ' is an unsupported type!');
+  if (type === "TPM_ALG_RSA") {
+    parameters = {
+      symmetric: TPM_ALG[pubAreaBuffer.slice(0, 2).readUInt16BE(0)],
+      scheme: TPM_ALG[pubAreaBuffer.slice(2, 4).readUInt16BE(0)],
+      keyBits: pubAreaBuffer.slice(4, 6).readUInt16BE(0),
+      exponent: pubAreaBuffer.slice(6, 10).readUInt32BE(0),
+    };
+    pubAreaBuffer = pubAreaBuffer.slice(10);
+  } else if (type === "TPM_ALG_ECC") {
+    parameters = {
+      symmetric: TPM_ALG[pubAreaBuffer.slice(0, 2).readUInt16BE(0)],
+      scheme: TPM_ALG[pubAreaBuffer.slice(2, 4).readUInt16BE(0)],
+      curveID: TPM_ECC_CURVE[pubAreaBuffer.slice(4, 6).readUInt16BE(0)],
+      kdf: TPM_ALG[pubAreaBuffer.slice(6, 8).readUInt16BE(0)],
+    };
+    pubAreaBuffer = pubAreaBuffer.slice(8);
+  } else throw new Error(type + " is an unsupported type!");
 
   let uniqueLength = pubAreaBuffer.slice(0, 2).readUInt16BE(0);
-  pubAreaBuffer  = pubAreaBuffer.slice(2);
+  pubAreaBuffer = pubAreaBuffer.slice(2);
   let unique = pubAreaBuffer.slice(0, uniqueLength);
-  pubAreaBuffer  = pubAreaBuffer.slice(uniqueLength);
+  pubAreaBuffer = pubAreaBuffer.slice(uniqueLength);
 
   return {
-      type,
-      nameAlg,
-      objectAttributes,
-      authPolicy,
-      parameters,
-      unique
-  }
-}
+    type,
+    nameAlg,
+    objectAttributes,
+    authPolicy,
+    parameters,
+    unique,
+  };
+};
 
 let COSEKEYS = {
   kty: 1,
@@ -510,66 +508,73 @@ var COSEALGHASH = {
 
 let hash = (alg, message) => {
   return crypto.createHash(alg).update(message).digest();
-}
+};
 
 let base64ToPem = (b64cert) => {
-  let pemcert = '';
-  for(let i = 0; i < b64cert.length; i += 64)
-      pemcert += b64cert.slice(i, i + 64) + '\n';
+  let pemcert = "";
+  for (let i = 0; i < b64cert.length; i += 64) pemcert += b64cert.slice(i, i + 64) + "\n";
 
-  return '-----BEGIN CERTIFICATE-----\n' + pemcert + '-----END CERTIFICATE-----';
-}
+  return "-----BEGIN CERTIFICATE-----\n" + pemcert + "-----END CERTIFICATE-----";
+};
 
 var getCertificateInfo = (certificate) => {
   let subjectCert = new jsrsasign.X509();
   subjectCert.readCertPEM(certificate);
 
   let subjectString = subjectCert.getSubjectString();
-  let subjectParts  = subjectString.slice(1).split('/');
+  let subjectParts = subjectString.slice(1).split("/");
 
   let subject = {};
-  for(let field of subjectParts) {
-      let kv = field.split('=');
-      subject[kv[0]] = kv[1];
+  for (let field of subjectParts) {
+    let kv = field.split("=");
+    subject[kv[0]] = kv[1];
   }
 
   let version = subjectCert.version;
   let basicConstraintsCA = !!subjectCert.getExtBasicConstraints().cA;
 
   return {
-      subject, version, basicConstraintsCA
-  }
-}
+    subject,
+    version,
+    basicConstraintsCA,
+  };
+};
 
 var parseAuthData = (buffer) => {
-  let rpIdHash      = buffer.slice(0, 32);          buffer = buffer.slice(32);
-  let flagsBuf      = buffer.slice(0, 1);           buffer = buffer.slice(1);
-  let flagsInt      = flagsBuf[0];
+  let rpIdHash = buffer.slice(0, 32);
+  buffer = buffer.slice(32);
+  let flagsBuf = buffer.slice(0, 1);
+  buffer = buffer.slice(1);
+  let flagsInt = flagsBuf[0];
   let flags = {
-      up: !!(flagsInt & 0x01),
-      uv: !!(flagsInt & 0x04),
-      at: !!(flagsInt & 0x40),
-      ed: !!(flagsInt & 0x80),
-      flagsInt
-  }
+    up: !!(flagsInt & 0x01),
+    uv: !!(flagsInt & 0x04),
+    at: !!(flagsInt & 0x40),
+    ed: !!(flagsInt & 0x80),
+    flagsInt,
+  };
 
-  let counterBuf    = buffer.slice(0, 4);           buffer = buffer.slice(4);
-  let counter       = counterBuf.readUInt32BE(0);
+  let counterBuf = buffer.slice(0, 4);
+  buffer = buffer.slice(4);
+  let counter = counterBuf.readUInt32BE(0);
 
-  let aaguid        = undefined;
-  let credID        = undefined;
+  let aaguid = undefined;
+  let credID = undefined;
   let COSEPublicKey = undefined;
 
-  if(flags.at) {
-      aaguid           = buffer.slice(0, 16);          buffer = buffer.slice(16);
-      let credIDLenBuf = buffer.slice(0, 2);           buffer = buffer.slice(2);
-      let credIDLen    = credIDLenBuf.readUInt16BE(0);
-      credID           = buffer.slice(0, credIDLen);   buffer = buffer.slice(credIDLen);
-      COSEPublicKey    = buffer;
+  if (flags.at) {
+    aaguid = buffer.slice(0, 16);
+    buffer = buffer.slice(16);
+    let credIDLenBuf = buffer.slice(0, 2);
+    buffer = buffer.slice(2);
+    let credIDLen = credIDLenBuf.readUInt16BE(0);
+    credID = buffer.slice(0, credIDLen);
+    buffer = buffer.slice(credIDLen);
+    COSEPublicKey = buffer;
   }
 
-  return {rpIdHash, flagsBuf, flags, counter, counterBuf, aaguid, credID, COSEPublicKey}
-}
+  return { rpIdHash, flagsBuf, flags, counter, counterBuf, aaguid, credID, COSEPublicKey };
+};
 
 var getCertificateInfo = (certificate) => {
   let subjectCert = new jsrsasign.X509();
@@ -604,52 +609,50 @@ const parseCertInfo = (certInfoBuffer) => {
   certInfoBuffer = certInfoBuffer.slice(2);
 
   let qualifiedSignerLength = certInfoBuffer.slice(0, 2).readUInt16BE(0);
-  certInfoBuffer  = certInfoBuffer.slice(2);
+  certInfoBuffer = certInfoBuffer.slice(2);
   let qualifiedSigner = certInfoBuffer.slice(0, qualifiedSignerLength);
-  certInfoBuffer  = certInfoBuffer.slice(qualifiedSignerLength);
+  certInfoBuffer = certInfoBuffer.slice(qualifiedSignerLength);
 
   let extraDataLength = certInfoBuffer.slice(0, 2).readUInt16BE(0);
-  certInfoBuffer  = certInfoBuffer.slice(2);
-  let extraData   = certInfoBuffer.slice(0, extraDataLength);
-  certInfoBuffer  = certInfoBuffer.slice(extraDataLength);
+  certInfoBuffer = certInfoBuffer.slice(2);
+  let extraData = certInfoBuffer.slice(0, extraDataLength);
+  certInfoBuffer = certInfoBuffer.slice(extraDataLength);
 
   let clockInfo = {
-      clock: certInfoBuffer.slice(0, 8),
-      resetCount: certInfoBuffer.slice(8, 12).readUInt32BE(0),
-      restartCount: certInfoBuffer.slice(12, 16).readUInt32BE(0),
-      safe: !!(certInfoBuffer[16])
-  }
-  certInfoBuffer  = certInfoBuffer.slice(17);
+    clock: certInfoBuffer.slice(0, 8),
+    resetCount: certInfoBuffer.slice(8, 12).readUInt32BE(0),
+    restartCount: certInfoBuffer.slice(12, 16).readUInt32BE(0),
+    safe: !!certInfoBuffer[16],
+  };
+  certInfoBuffer = certInfoBuffer.slice(17);
 
   let firmwareVersion = certInfoBuffer.slice(0, 8);
-  certInfoBuffer      = certInfoBuffer.slice(8);
+  certInfoBuffer = certInfoBuffer.slice(8);
 
-  let attestedNameBufferLength = certInfoBuffer.slice(0, 2).readUInt16BE(0)
+  let attestedNameBufferLength = certInfoBuffer.slice(0, 2).readUInt16BE(0);
   let attestedNameBuffer = certInfoBuffer.slice(2, attestedNameBufferLength + 2);
-  certInfoBuffer = certInfoBuffer.slice(2 + attestedNameBufferLength)
+  certInfoBuffer = certInfoBuffer.slice(2 + attestedNameBufferLength);
 
-  let attestedQualifiedNameBufferLength = certInfoBuffer.slice(0, 2).readUInt16BE(0)
+  let attestedQualifiedNameBufferLength = certInfoBuffer.slice(0, 2).readUInt16BE(0);
   let attestedQualifiedNameBuffer = certInfoBuffer.slice(2, attestedQualifiedNameBufferLength + 2);
-  certInfoBuffer = certInfoBuffer.slice(2 + attestedQualifiedNameBufferLength)
+  certInfoBuffer = certInfoBuffer.slice(2 + attestedQualifiedNameBufferLength);
 
   let attested = {
-      nameAlg: TPM_ALG[attestedNameBuffer.slice(0, 2).readUInt16BE(0)],
-      name: attestedNameBuffer,
-      qualifiedName: attestedQualifiedNameBuffer
-  }
+    nameAlg: TPM_ALG[attestedNameBuffer.slice(0, 2).readUInt16BE(0)],
+    name: attestedNameBuffer,
+    qualifiedName: attestedQualifiedNameBuffer,
+  };
 
   return {
-      magic,
-      type,
-      qualifiedSigner,
-      extraData,
-      clockInfo,
-      firmwareVersion,
-      attested
-  }
-}
-
-
+    magic,
+    type,
+    qualifiedSigner,
+    extraData,
+    clockInfo,
+    firmwareVersion,
+    attested,
+  };
+};
 
 // let verifyPackedAttestation = (webAuthnResponse) => {
 //   // TODO: check challenge
@@ -749,7 +752,7 @@ const parseCertInfo = (certInfoBuffer) => {
 //       if(pubKeyCose.get(COSEKEYS.kty) === COSEKTY.EC2) {
 //           let x = pubKeyCose.get(COSEKEYS.x);
 //           let y = pubKeyCose.get(COSEKEYS.y);
-          
+
 //           let ansiKey = Buffer.concat([Buffer.from([0x04]), x, y]);
 
 //           let signatureBaseHash = hash(hashAlg, signatureBaseBuffer);
@@ -785,7 +788,6 @@ const parseCertInfo = (certInfoBuffer) => {
 
 //   return true
 // }
-
 
 // let verifyPackedAttestation = (webAuthnResponse) => {
 //   let attestationBuffer = webAuthnResponse.response.attestationObject;
@@ -900,14 +902,32 @@ const parseCertInfo = (certInfoBuffer) => {
 
 // console.log(verifyPackedAttestation(obj));
 
-var assertionObj = {
-  id: 'Fak2Wf9AIqpJFEvgXNCJy9KVdHobW_hez14PuRXDLBY',
-  rawId: Buffer.from('Fak2Wf9AIqpJFEvgXNCJy9KVdHobW/hez14PuRXDLBY=', 'base64'),
+var attestationObj = {
+  id: "ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd-45HOo-J7jKE",
+  rawId: Buffer.from("ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd+45HOo+J7jKE=", 'base64'),
+  type: "public-key",
   response: {
-    authenticatorData: Buffer.from('SZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2MFAAAAAg==', 'base64'),
-    clientDataJSON: Buffer.from('eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDo0MDAwIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ==', 'base64'),
-    signature: Buffer.from('hrARhi16sjjISf9MhgW6fvBrDL3jIEXhRmzvFjVfK9mJEgNeikJ3R+4PpJ8OB9vexPpt/OX6lOJczTLFOQxxB38xaup8npa730Y1hURuTyFODnYuXMECNtf23Zv8f4rN9AfWaq10oH7YFok8YLHMGGABAE/pRFbXOgr0tp9H6Y0B7Xmr02yuHR3uDLg2g3Wq/BN5XmVTeMfnN5GCyNnJ8Drvg4F/2w1Q92moj+t0gDMgmd24pmdRINHAxJdIm0rnHWedHl/915lWhansoS8dmKZO9q8sSlQ6xg67emuDlzygCEaENKiU30fetJgXlFPpkU/sRM9BMsGBcTepP5RqEA==', 'base64'),
-    userHandle: Buffer.from('VVpTTDg1VDlBRkM=', 'base64')
+    attestationObject:
+      Buffer.from("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", 'base64'),
+    clientDataJSON:
+      Buffer.from("eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cHM6Ly9zdGFyay1jaXRhZGVsLTAzMzMxLmhlcm9rdWFwcC5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9", 'base64')
   },
-  type: 'public-key'
-}
+};
+
+var assertionObj = {
+  id: "Fak2Wf9AIqpJFEvgXNCJy9KVdHobW_hez14PuRXDLBY",
+  rawId: Buffer.from("Fak2Wf9AIqpJFEvgXNCJy9KVdHobW/hez14PuRXDLBY=", "base64"),
+  response: {
+    authenticatorData: Buffer.from("SZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2MFAAAAAg==", "base64"),
+    clientDataJSON: Buffer.from(
+      "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDo0MDAwIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ==",
+      "base64"
+    ),
+    signature: Buffer.from(
+      "hrARhi16sjjISf9MhgW6fvBrDL3jIEXhRmzvFjVfK9mJEgNeikJ3R+4PpJ8OB9vexPpt/OX6lOJczTLFOQxxB38xaup8npa730Y1hURuTyFODnYuXMECNtf23Zv8f4rN9AfWaq10oH7YFok8YLHMGGABAE/pRFbXOgr0tp9H6Y0B7Xmr02yuHR3uDLg2g3Wq/BN5XmVTeMfnN5GCyNnJ8Drvg4F/2w1Q92moj+t0gDMgmd24pmdRINHAxJdIm0rnHWedHl/915lWhansoS8dmKZO9q8sSlQ6xg67emuDlzygCEaENKiU30fetJgXlFPpkU/sRM9BMsGBcTepP5RqEA==",
+      "base64"
+    ),
+    userHandle: Buffer.from("VVpTTDg1VDlBRkM=", "base64"),
+  },
+  type: "public-key",
+};

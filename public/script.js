@@ -47,14 +47,13 @@ function toArrayBuffer(buf) {
 }
 
 (async function () {
-  console.log("HAOSHOFAHO");
   let pubKeyCredParams;
 
-  if (navigator.appVersion.includes("Windows")) {
-    pubKeyCredParams = [{ alg: -257, type: "public-key" }];
-  } else {
+  // if (navigator.appVersion.includes("Windows")) {
+  //   pubKeyCredParams = [{ alg: -257, type: "public-key" }];
+  // } else {
     pubKeyCredParams = [{ alg: -7, type: "public-key" }];
-  }
+  // }
 
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
