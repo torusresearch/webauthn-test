@@ -85,7 +85,7 @@ function toArrayBuffer(buf) {
       userVerification: "discouraged",
     },
     timeout: 60000,
-    attestation: "indirect",
+    attestation: "none",
   };
 
   // function subAlg(alg) {
