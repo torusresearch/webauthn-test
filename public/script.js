@@ -68,7 +68,7 @@ function toArrayBuffer(buf) {
     },
     pubKeyCredParams,
     authenticatorSelection: {
-      authenticatorAttachment: "platform",
+      authenticatorAttachment: "cross-platform",
       requireResidentKey: true,
       userVerification: "required",
     },
