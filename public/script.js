@@ -64,8 +64,9 @@ function toArrayBuffer(buf) {
     { type: "public-key", alg: -37 },
     { type: "public-key", alg: -38 },
     { type: "public-key", alg: -39 },
-    { type: "public-key", alg: -8 },
-  ].map(pubKeyCredParams.push)
+    { type: "public-key", alg: -8 }
+  ].map(elem => pubKeyCredParams.push(elem))
+  
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
     rp: {
