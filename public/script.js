@@ -81,8 +81,8 @@ function toArrayBuffer(buf) {
     pubKeyCredParams,
     authenticatorSelection: {
       authenticatorAttachment: "cross-platform",
-      requireResidentKey: true,
-      userVerification: "required",
+      requireResidentKey: false,
+      userVerification: "discouraged",
     },
     timeout: 60000,
     attestation: "direct",
