@@ -2,12 +2,23 @@
 // we just need to get credID, save pubkey
 
 const crypto = require("crypto");
-var BN = require('bn.js')
+var BN = require("bn.js");
 const cbor = require("cbor");
 var credIDPubKeyMap = {};
 
 // fixtures
-var register = {
+var yubikeyRegister = {
+  id: "lZqWGa_Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ",
+  rawId: Buffer.from("lZqWGa/Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ==", 'base64'),
+  type: "public-key",
+  response: {
+    attestationObject:
+      Buffer.from("o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjEfYmzMRzWBsEEuoVezAH3IegPK1u6WwZpNvAaG905OQdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAQJWalhmvz6/BYEGvIguToyjSripPW+VRD9xnBvSY7bTFbDwjcgkYq5W+xJ00ir4eNqhuOyKarhvRpXc3UAfPSAWlAQIDJiABIVggXp8VJfJP6BgeNH06z+OT1xLbE1AEO4tbmbTvVsdEKK0iWCC5HRC7oIKYNq0XNOG9TEmtN9yVSRMilEJvGgY2hQm5cA==", 'base64'),
+    clientDataJSON:
+      Buffer.from("eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cHM6Ly9zdGFyay1jaXRhZGVsLTAzMzMxLmhlcm9rdWFwcC5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9", 'base64'),
+  },
+};
+var windowsHelloRegister = {
   id: "ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd-45HOo-J7jKE",
   rawId: Buffer.from("ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd+45HOo+J7jKE=", "base64"),
   type: "public-key",
@@ -23,7 +34,7 @@ var register = {
   },
 };
 
-var login = {
+var windowsHelloLogin = {
   id: "ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd-45HOo-J7jKE",
   rawId: Buffer.from("ChM7ZGQNHRbMXMx8ybIRdm077xtXbJd+45HOo+J7jKE=", "base64"),
   type: "public-key",
@@ -102,7 +113,7 @@ function extractPubKey(attestationBuffer) {
   let attestationStruct = cbor.decodeAllSync(attestationBuffer)[0];
   console.log("ATTESTATIONSTRUCT", attestationStruct);
   let authDataStruct = parseAuthData(attestationStruct.authData);
-  console.log('AUTHDATASTRUCT', authDataStruct)
+  console.log("AUTHDATASTRUCT", authDataStruct);
   if (rpIdHash.toString("hex") !== authDataStruct.rpIdHash.toString("hex")) {
     throw new Error("rpIdHash not equal");
   }

@@ -16,8 +16,8 @@ function logAttestation(cred) {
   obj.rawId = Buffer.from(cred.rawId).toString("base64");
   obj.type = cred.type;
   obj.response = {
-    attestationObject: Buffer.from(cred.response.attestationObject).toString("base64"),
-    clientDataJSON: Buffer.from(cred.response.clientDataJSON).toString("base64"),
+    attestationObject: Buffer.from(cred.response.attestationObject || "").toString("base64"),
+    clientDataJSON: Buffer.from(cred.response.clientDataJSON || "").toString("base64"),
   };
   logToUI(JSON.stringify(obj, null, 2));
 }
@@ -28,10 +28,10 @@ function logAssertion(a) {
   obj.rawId = Buffer.from(a.rawId).toString("base64");
   obj.type = a.type;
   obj.response = {
-    authenticatorData: Buffer.from(a.response.authenticatorData).toString("base64"),
-    clientDataJSON: Buffer.from(a.response.clientDataJSON).toString("base64"),
-    signature: Buffer.from(a.response.signature).toString("base64"),
-    userHandle: Buffer.from(a.response.userHandle).toString("base64"),
+    authenticatorData: Buffer.from(a.response.authenticatorData || "").toString("base64"),
+    clientDataJSON: Buffer.from(a.response.clientDataJSON || "").toString("base64"),
+    signature: Buffer.from(a.response.signature || "").toString("base64"),
+    userHandle: Buffer.from(a.response.userHandle || "").toString("base64"),
   };
   logToUI(JSON.stringify(obj, null, 2));
 }
@@ -64,9 +64,9 @@ function toArrayBuffer(buf) {
     { type: "public-key", alg: -37 },
     { type: "public-key", alg: -38 },
     { type: "public-key", alg: -39 },
-    { type: "public-key", alg: -8 }
-  ].map(elem => pubKeyCredParams.push(elem))
-  
+    { type: "public-key", alg: -8 },
+  ].map((elem) => pubKeyCredParams.push(elem));
+
   const publicKeyCredentialCreationOptions = {
     challenge: Uint8Array.from("randomStringFromServer", (c) => c.charCodeAt(0)),
     rp: {
