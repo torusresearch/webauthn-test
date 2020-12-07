@@ -9,13 +9,31 @@ var credIDPubKeyMap = {};
 // fixtures
 var yubikeyRegister = {
   id: "lZqWGa_Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ",
-  rawId: Buffer.from("lZqWGa/Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ==", 'base64'),
+  rawId: Buffer.from("lZqWGa/Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ==", "base64"),
   type: "public-key",
   response: {
-    attestationObject:
-      Buffer.from("o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjEfYmzMRzWBsEEuoVezAH3IegPK1u6WwZpNvAaG905OQdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAQJWalhmvz6/BYEGvIguToyjSripPW+VRD9xnBvSY7bTFbDwjcgkYq5W+xJ00ir4eNqhuOyKarhvRpXc3UAfPSAWlAQIDJiABIVggXp8VJfJP6BgeNH06z+OT1xLbE1AEO4tbmbTvVsdEKK0iWCC5HRC7oIKYNq0XNOG9TEmtN9yVSRMilEJvGgY2hQm5cA==", 'base64'),
-    clientDataJSON:
-      Buffer.from("eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cHM6Ly9zdGFyay1jaXRhZGVsLTAzMzMxLmhlcm9rdWFwcC5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9", 'base64'),
+    attestationObject: Buffer.from(
+      "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjEfYmzMRzWBsEEuoVezAH3IegPK1u6WwZpNvAaG905OQdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAQJWalhmvz6/BYEGvIguToyjSripPW+VRD9xnBvSY7bTFbDwjcgkYq5W+xJ00ir4eNqhuOyKarhvRpXc3UAfPSAWlAQIDJiABIVggXp8VJfJP6BgeNH06z+OT1xLbE1AEO4tbmbTvVsdEKK0iWCC5HRC7oIKYNq0XNOG9TEmtN9yVSRMilEJvGgY2hQm5cA==",
+      "base64"
+    ),
+    clientDataJSON: Buffer.from(
+      "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cHM6Ly9zdGFyay1jaXRhZGVsLTAzMzMxLmhlcm9rdWFwcC5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "base64"
+    ),
+  },
+};
+var yubikeyLogin = {
+  id: "lZqWGa_Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ",
+  rawId: Buffer.from("lZqWGa/Pr8FgQa8iC5OjKNKuKk9b5VEP3GcG9JjttMVsPCNyCRirlb7EnTSKvh42qG47IpquG9GldzdQB89IBQ==", "base64"),
+  type: "public-key",
+  response: {
+    authenticatorData: Buffer.from("fYmzMRzWBsEEuoVezAH3IegPK1u6WwZpNvAaG905OQcBAAAAAg==", "base64"),
+    clientDataJSON: Buffer.from(
+      "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiY21GdVpHOXRVM1J5YVc1blJuSnZiVk5sY25abGNnIiwib3JpZ2luIjoiaHR0cHM6Ly9zdGFyay1jaXRhZGVsLTAzMzMxLmhlcm9rdWFwcC5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "base64"
+    ),
+    signature: Buffer.from("MEUCIQD4gaWCuhnlPCUc8o7osZ+9mC4Eo/5atwCcxgoDZwk5SQIgTAMyQGYPmsyGkesa57LdETZw1SUZ4C/2/9+uMMYN4CQ=", "base64"),
+    userHandle: "",
   },
 };
 var windowsHelloRegister = {
@@ -120,7 +138,12 @@ function extractPubKey(attestationBuffer) {
   let pubKeyCose = cbor.decodeAllSync(authDataStruct.COSEPublicKey)[0];
   if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.EC2) {
     console.log(pubKeyCose.get(COSEKEYS.x));
-    throw new Error("TODO");
+    return {
+      x: new BN(Buffer.from(pubKeyCose.get(COSEKEYS.x))),
+      y: new BN(Buffer.from(pubKeyCose.get(COSEKEYS.y))),
+      n: undefined,
+      e: undefined,
+    };
   } else if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.RSA) {
     return {
       x: undefined,
@@ -139,4 +162,15 @@ function registerPubKey(register) {
   console.log(credIDPubKeyMap);
 }
 
-registerPubKey(register);
+function webAuthnLogin(login) {
+  const pubKey = credIDPubKeyMap[login.id]
+  if (!pubKey) {
+    throw new Error('not registered')
+  }
+  
+}
+
+registerPubKey(yubikeyRegister);
+registerPubKey(windowsHelloRegister);
+webAuthnLogin(yubikeyLogin)
+webAuthnLogin(windowsHelloLogin)
