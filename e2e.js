@@ -137,7 +137,7 @@ function extractPubKey(attestationBuffer) {
   }
   let pubKeyCose = cbor.decodeAllSync(authDataStruct.COSEPublicKey)[0];
   if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.EC2) {
-    console.log(pubKeyCose.get(COSEKEYS.x));
+    // console.log(pubKeyCose.get(COSEKEYS.x));
     return {
       x: new BN(Buffer.from(pubKeyCose.get(COSEKEYS.x))),
       y: new BN(Buffer.from(pubKeyCose.get(COSEKEYS.y))),
