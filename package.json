@@ -18,7 +18,7 @@
     "cose-js": "^0.4.2",
     "elliptic": "^6.5.3",
     "express": "^4.17.1",
-    "jsrsasign": "^10.1.4",
+    "jsrsasign": "^10.2.0",
     "node-forge": "^0.10.0",
     "node-rsa": "^1.1.1"
   }
