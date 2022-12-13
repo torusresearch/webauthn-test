@@ -17,7 +17,7 @@
     "cbor": "^5.1.0",
     "cose-js": "^0.4.2",
     "elliptic": "^6.5.3",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "jsrsasign": "^10.1.4",
     "node-forge": "^0.10.0",
     "node-rsa": "^1.1.1"
